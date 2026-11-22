@@ -103,3 +103,20 @@ function(leren_gtest target)
     target_link_libraries(${target} PRIVATE GTest::gtest_main)
     gtest_discover_tests(${target} DISCOVERY_MODE PRE_TEST)
 endfunction()
+
+# leren_compile_fail_test(<name> <source> <regex>) registers a test that
+# compiles <source> (relative to the current source dir) and passes only when
+# the compiler REFUSES it with a message that matches <regex>. Use it to prove
+# that a type rejects a mistake that a concept cannot express, such as the
+# order of designated initializers. The flags are fixed and include -Werror,
+# as for safe code (B12): some guards exist only as warnings in one compiler.
+function(leren_compile_fail_test name source regex)
+    add_test(NAME ${name}
+        COMMAND ${CMAKE_CXX_COMPILER} -std=c++23 -fsyntax-only
+                -Wall -Wextra -Wpedantic -Werror
+                -I${CMAKE_CURRENT_SOURCE_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    set_tests_properties(${name} PROPERTIES
+        PASS_REGULAR_EXPRESSION "${regex}"
+        LABELS "compile-fail")
+endfunction()

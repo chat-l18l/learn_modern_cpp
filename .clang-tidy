@@ -1,5 +1,7 @@
 # Static analysis for the experiments. Run: pixi run tidy
 # The list is wide on purpose: we want to see what each check finds.
+# misc-non-private-member-variables-in-classes is off: it conflicts with P1
+# (data in plain structs with public members). Decision B21.
 Checks: >
   -*,
   bugprone-*,
@@ -19,7 +21,8 @@ Checks: >
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-avoid-c-arrays,
   -modernize-avoid-c-arrays,
-  -portability-avoid-pragma-once
+  -portability-avoid-pragma-once,
+  -misc-non-private-member-variables-in-classes
 WarningsAsErrors: ''
 HeaderFilterRegex: 'experimenten/.*'
 FormatStyle: file

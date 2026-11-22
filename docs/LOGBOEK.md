@@ -5,6 +5,40 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 10: experiment e005, sterke types (G28, G29)
+
+**Gedaan:**
+
+1. Experiment e005: sterke handles, grootheden, een vaste tabel en een pool met generatie.
+2. 24 `static_assert`-tests tijdens het compileren, vier compile-fail-tests, unit tests, en drie
+   blinde-vlek-tests voor fouten zonder ongedefinieerd gedrag.
+3. `leren_compile_fail_test` in `cmake/leren.cmake` (B21).
+4. P2 regel 11: een sterk type ziet geen verwisseling van twee waarden van hetzelfde type.
+
+**Gemeten:**
+
+- `pixi run check` slaagt: 57 tests zonder sanitizer, 62 met ASan, per compiler.
+- Een verouderde index en een verwisseling geven foute uitvoer. Geen sanitizer meldt iets.
+- Een generatie van 16 bits loopt na 65536 keer hergebruik rond. De oude handle is dan weer geldig.
+- Designated initializers in de verkeerde volgorde: fout in GCC, waarschuwing in Clang.
+- clang-tidy `readability-suspicious-call-argument` en cppcheck `knownConditionTrueFalse` vonden
+  de verwisseling in de demo. `bugprone-easily-swappable-parameters` meldde de constructor van
+  `Sensor_handle` in onze eigen veilige code.
+
+**Gevonden tijdens het werk:**
+
+- De taak `cppcheck` sloeg alleen `demo_unsafe.cpp` over. Nu alle `demo_*.cpp`.
+- `misc-non-private-member-variables-in-classes` botst met P1; uitgezet.
+- Bewezen dat de nieuwe tests kunnen falen: zonder `explicit` stoppen vier `static_assert`s.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
 ## 2026-11-22 — Stap 9: handles en grootheden als sterke types (B20)
 
 **Gedaan:**

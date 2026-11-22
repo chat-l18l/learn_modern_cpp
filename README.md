@@ -197,6 +197,7 @@ De standaardpreset is `gcc-debug`.
 | e002 | Referentie, iterator of range-for in een `std::vector` na `push_back` | G02 | ASan, cppcheck en Clang 23 altijd (de laatste twee ook vals bij `reserve`); debug-modus alleen iterators; GCC en clang-tidy niet | [verslag](experimenten/e002-vector-push-back/README.md) |
 | e003 | Code van anderen: verborgen waarschuwingen en blinde vlekken | G24, G25, G26 | Gewone bouw niets (`-isystem`); `clang-audit` vindt 2 van 4 fouten precies; ASan alleen in code die uit de bron is gebouwd | [verslag](experimenten/e003-code-van-anderen/README.md) |
 | e004 | Lambda met `[&]` of `[=]` die langer leeft dan wat ze vangt; waar captures staan en wat ze aan stack kosten | G03 | ASan, cppcheck, clang-tidy en Clang 23 altijd; GCC alleen `[=]` met `this` | [verslag](experimenten/e004-lambda-capture/README.md) |
+| e005 | Sterke types: handles, grootheden, verouderde index en verwisselde parameters | G28, G29 | Compiler weigert misbruik van sterke types; geen sanitizer ziet G28 of G29; clang-tidy en cppcheck vonden de verwisseling in de demo | [verslag](experimenten/e005-sterke-types/README.md) |
 
 ## Tests
 
@@ -206,6 +207,7 @@ Er zijn twee soorten tests. CTest draait beide.
 | --- | --- | --- |
 | Unit test (GoogleTest) | De veilige vorm doet wat het verslag zegt | Bij elke preset |
 | Vangnet-test | Een sanitizer of de debug-modus van libstdc++ vangt de onveilige demo. De test faalt als de fout ongemerkt doorgaat. | Alleen bij de preset met dat vangnet |
+| Compile-fail-test | Een bron compileert niet, en de compiler noemt de verwachte reden. Voor eisen aan types die een `static_assert` niet kan uitdrukken. | Bij elke preset |
 | Controletest | Een correcte variant van de demo slaagt, ook onder een sanitizer. Zo blijkt dat het vangnet geen vals alarm geeft. | Bij elke preset |
 | Blinde-vlek-test | Een vangnet ziet een fout aantoonbaar niet. De test faalt als het vangnet de fout later wel ziet; dan moet het verslag worden bijgewerkt. | Alleen bij de preset met dat vangnet |
 

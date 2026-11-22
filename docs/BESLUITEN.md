@@ -28,6 +28,7 @@ verwijst naar het oude.
 | B18 | Ontwerpprincipes en auditvragen als eigen documenten | Besluit | 2026-11-22 |
 | B19 | Data-oriented design afgewogen: helderheid eerst, performance na een meting | Besluit | 2026-11-22 |
 | B20 | Handles en fysieke grootheden zijn sterke types | Besluit | 2026-11-22 |
+| B21 | Compile-fail-tests, demo's zonder UB, en clang-tidy afgestemd op P1 | Besluit | 2026-11-22 |
 
 ---
 
@@ -366,4 +367,20 @@ volledige tabel staat bij P2 regel 6.
 2. Nieuwe auditvragen A21 (handles) en A22 (grootheden), en catalogusregel G29 (verwisselde
    parameters).
 3. Een experiment kan de meting vastleggen als tests die tijdens het compileren draaien, en
-   ook de grootheden meten. Dat is nog niet gedaan.
+   ook de grootheden meten. **Gedaan op 2026-11-22 in e005.** e005 voegde P2 regel 11 toe: een
+   sterk type ziet geen verwisseling van twee waarden van hetzelfde type.
+
+### B21 — Compile-fail-tests, demo's zonder UB, en clang-tidy afgestemd op P1
+
+**Besluit (2026-11-22):**
+
+| Onderwerp | Besluit |
+| --- | --- |
+| Compile-fail-test | `cmake/leren.cmake` heeft `leren_compile_fail_test(<naam> <bron> <regex>)`. De test compileert de bron met `-Wall -Wextra -Wpedantic -Werror` en slaagt alleen als de compiler weigert met een melding die bij de regex past. Bronnen staan in `compile_fail/` van het experiment. |
+| Demo's | Een demo heet `demo_<iets>.cpp`. `demo_unsafe.cpp` heeft ongedefinieerd gedrag. `demo_bugs.cpp` heeft fouten zonder ongedefinieerd gedrag; de uitvoer is dan voorspelbaar en mag als test (blinde-vlek-test). `pixi run cppcheck` slaat alle `demo_*.cpp` over, `pixi run cppcheck-unsafe` meet ze. |
+| clang-tidy | `misc-non-private-member-variables-in-classes` staat uit. Die controle wil private leden, en botst met P1: data staat in eenvoudige structs. |
+
+**Waarom:** e005 had een test nodig voor iets dat een `concept` niet kan uitdrukken: de volgorde
+van designated initializers. En e005 heeft fouten zonder ongedefinieerd gedrag, die niet onder
+`demo_unsafe.cpp` vallen. clang-tidy gaf op elke handle en elke grootheid een melding over het
+publieke lid `value`.

@@ -32,7 +32,7 @@ in [AUDITVRAGEN.md](AUDITVRAGEN.md).
 | ID | Status | Bewijs |
 | --- | --- | --- |
 | P1 | vastgesteld | e004 |
-| P2 | vastgesteld | e001, e002, e004 |
+| P2 | vastgesteld | e001, e002, e004, e005 |
 | P3 | werkhypothese | G27: voorlopige meting, nog geen experiment |
 | P4 | werkhypothese | – |
 | P5 | vastgesteld | e004, B16 |
@@ -138,7 +138,8 @@ struct Sensor_id {
 | Een handle uit een getal maken alleen in de tabel (`<x>_add`), in `<x>_find` (een ID van buiten) en in tests | Elke andere `Sensor_id{...}` is een bevinding in de review. Zoek met `grep 'Sensor_id{'`. |
 | Eén uitgeschreven struct per tabel, geen template | De struct is in één oogopslag te lezen, en de foutmeldingen blijven kort |
 
-Gemeten op 2026-11-22 met GCC 15.3 en Clang 23.1, met `static_assert` tijdens het compileren:
+Gemeten op 2026-11-22 met GCC 15.3 en Clang 23.1, met `static_assert` tijdens het compileren.
+De tests staan in [e005](../experimenten/e005-sterke-types/README.md):
 
 | Fout | Kale `std::size_t` | `struct { std::uint16_t value; }` | Sterk type hierboven |
 | --- | --- | --- | --- |
@@ -172,6 +173,13 @@ De kolom "kale `std::size_t`" volgt uit de taalregels en is niet apart gemeten.
     bewerkingen die de grootheid nodig heeft, bijvoorbeeld `Millivolt + Millivolt`. Tijd is een
     `std::chrono`-type: `std::chrono::milliseconds`. Binnen een pure rekenfunctie mag een kaal
     getal. De omzetting staat dan aan het begin en het einde van de functie, via `.value`.
+11. Een sterk type ziet geen verwisseling van twee waarden van hetzelfde type:
+    `alarm(Millivolt low, Millivolt high, ...)` aangeroepen als `alarm(high, low, ...)`
+    compileert. Twee of meer waarden van hetzelfde type gaan daarom in een struct met benoemde
+    velden, en de aanroeper gebruikt designated initializers:
+    `Limits{.low = Millivolt{100}, .high = Millivolt{900}}`. De verkeerde volgorde is een fout
+    in GCC, en in Clang alleen met `-Werror` (B12). Een veld zonder default constructor kan de
+    aanroeper niet overslaan.
 
 Regel 5 is nodig omdat P1 de data losmaakt van het gedrag. Object-oriëntatie beschermt
 invarianten door data in een klasse te verbergen. Zonder die klasse moet de bescherming uit de
@@ -189,7 +197,9 @@ vrijgegeven geheugen bevat vaak nog de oude waarde, en de test is groen.
 | --- | --- |
 | A1–A5, A17, A18, A21, A22 | auditvraag |
 | `static_assert` met een `concept` op de eigenschappen van een handle | compiler |
-| `bugprone-easily-swappable-parameters`: twee naast elkaar staande parameters van hetzelfde type, een teken van een ontbrekend sterk type | clang-tidy |
+| `bugprone-easily-swappable-parameters`: twee naast elkaar staande parameters van hetzelfde type | clang-tidy |
+| `readability-suspicious-call-argument`: een argument waarvan de naam bij een andere parameter past | clang-tidy |
+| Een compile-fail-test (`leren_compile_fail_test`) | ctest |
 | `[[clang::lifetimebound]]` op een parameter waarvan het resultaat leent | Clang |
 | `-Wlifetime-safety` | Clang 23 |
 | `invalidContainer`, `returnDanglingLifetime`, `invalidLifetime` | cppcheck |
@@ -202,6 +212,7 @@ vrijgegeven geheugen bevat vaak nog de oude waarde, en de test is groen.
 | [e001](../experimenten/e001-dangling-string-view/README.md) | Een `std::string_view` naar een tijdelijke `std::string`. Alleen ASan vindt het altijd. Zonder sanitizer geeft een korte string het juiste antwoord. |
 | [e002](../experimenten/e002-vector-push-back/README.md) | Een referentie in een vector na `push_back`. Of de code fout is, hangt af van de capaciteit: een getal dat niet in de code staat. |
 | [e004](../experimenten/e004-lambda-capture/README.md) | Een lambda die ontsnapt. In `gcc-debug` geeft de fout het juiste antwoord. |
+| [e005](../experimenten/e005-sterke-types/README.md) | Een sterk handle-type weigert een handle van een andere tabel, een `int` en `{3}`, vastgelegd met `static_assert`. Een verouderde gewone index leest een verkeerd element zonder dat een sanitizer het ziet. Een generatie van 16 bits loopt na 65536 keer hergebruik rond. |
 
 ---
 

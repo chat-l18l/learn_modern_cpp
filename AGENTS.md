@@ -75,6 +75,8 @@ experimenten/eNNN-korte-naam/
   <naam>.hpp/.cpp      de API die we bestuderen
   <naam>_test.cpp      unit tests van de veilige vorm (GoogleTest)
   demo_unsafe.cpp      de onveilige vorm, met opzet ongedefinieerd gedrag
+  demo_bugs.cpp        fouten zonder ongedefinieerd gedrag (optioneel)
+  compile_fail/*.cpp   bronnen die niet mogen compileren (optioneel)
 ```
 
 - Voeg elk nieuw experiment toe aan `experimenten/CMakeLists.txt`.
@@ -89,6 +91,11 @@ experimenten/eNNN-korte-naam/
   Die uitkomst verandert met compiler, vlaggen en geheugenindeling.
 - Een blinde-vlek-test (`FAIL_REGULAR_EXPRESSION` op de melding van het vangnet) mag alleen
   als het verslag de blinde vlek heeft gemeten. Zie e003.
+- Een eigenschap van een type leg je vast met `static_assert` op een `concept`. Wat een
+  `concept` niet kan uitdrukken, test je met `leren_compile_fail_test(<naam> <bron> <regex>)`.
+  Zet in de regex de melding van GCC en die van Clang (B21).
+- Plant na het schrijven van een `static_assert`- of compile-fail-test één fout, en kijk of de
+  test faalt. Een test die niet kan falen, bewijst niets.
 - Heeft een demo ook een correcte variant, registreer die dan als controletest onder elke
   preset. Die test bewijst dat het vangnet geen vals alarm geeft.
 - Een vals alarm in de veilige code onderdruk je zo klein mogelijk (`#pragma clang diagnostic`
@@ -97,7 +104,8 @@ experimenten/eNNN-korte-naam/
 
 ## Onveilige code
 
-- Onveilige code staat in een bestand met `unsafe` in de naam.
+- Onveilige code staat in een bestand met `unsafe` in de naam. Een fout zonder ongedefinieerd
+  gedrag staat in `demo_bugs.cpp`.
 - Bovenaan staat: `THIS PROGRAM HAS UNDEFINED BEHAVIOUR ON PURPOSE. Do not fix it.`
 - Repareer onveilige code nooit, ook niet als clang-tidy erom vraagt. Zet een opmerking bij
   de onveilige regel die zegt wat er misgaat.
@@ -201,6 +209,9 @@ principes en blijft staan als studiemateriaal.
 - Een `requires`-expressie buiten een template is geen test die `false` oplevert. Code die niet
   compileert, geeft dan een harde fout. Zet de controle in een `concept` met een
   template-parameter, en test dat concept met `static_assert` (B20).
+- Designated initializers in de verkeerde volgorde zijn in GCC een fout, in Clang alleen een
+  waarschuwing (`-Wreorder-init-list`). De bescherming van P2 regel 11 hangt in Clang af van
+  `-Werror` (e005).
 - Vervang de globale `operator new` niet in een binary die onder een sanitizer draait. ASan
   vervangt `operator new` zelf, en de twee mengen: `alloc-dealloc-mismatch` (e004).
 - Een stackmeting (`-fstack-usage`) zegt alleen iets bij de optimalisatie van het doel. Onder
