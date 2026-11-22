@@ -123,7 +123,7 @@ Acceptatie:
 
 | Onderwerp | Waarom later |
 | --- | --- |
-| Continue integratie (CI) | Eerst de werkwijze lokaal bewijzen. Er is nog geen externe repository. |
+| Continue integratie (CI) | Eerst de werkwijze lokaal bewijzen. De externe repository staat op GitHub sinds 2026-11-22; GitHub Actions is de voor de hand liggende keuze. |
 | C++-modules en `import std` | CMake bouwt dan bij elk doel de std-module. Zie besluit B09. |
 | Coroutines en hun levensduur | Vraagt eerst de basis uit fase 1 |
 | MemorySanitizer | Vraagt een libstdc++ die met MSan is gebouwd |

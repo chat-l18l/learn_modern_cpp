@@ -145,7 +145,9 @@ Code van anderen staat in `vreemd/`. Daar gelden de regels uit B14 en de metinge
 - Commitberichten in het Nederlands. Onderwerpregel: een hele zin die zegt wat er nu waar
   is, zonder punt, maximaal 72 tekens. Noem het experiment- of catalogus-ID als dat past.
   Voorbeeld: `e002: iterator ongeldig na push_back, ASan vangt het (G02)`.
-- Commit of push alleen als de gebruiker erom vraagt.
+- Commit alleen als de gebruiker erom vraagt.
+- De externe repository is `origin`: `git@github.com:chat-l18l/learn_modern_cpp.git`, tak
+  `main`. Push na elke commit naar `origin`: `git push`. Gebruik nooit `--force`.
 - `build/` en `.pixi/` staan niet in Git. `pixi.lock` staat wel in Git.
 
 ## Valkuilen
