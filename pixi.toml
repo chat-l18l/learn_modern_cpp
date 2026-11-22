@@ -22,7 +22,11 @@ check = { depends-on = [
 
 # Static analysis. clang-tidy reads build/clang-debug/compile_commands.json.
 tidy = { cmd = "run-clang-tidy -quiet -p build/clang-debug experimenten", depends-on = [{ task = "configure", args = ["clang-debug"] }] }
-cppcheck = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --library=googletest --inline-suppr --quiet --error-exitcode=1 --project=build/gcc-debug/compile_commands.json -ibuild", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
+# cppcheck over the safe code. Must report nothing. The demos are skipped:
+# their findings are measurements, see cppcheck-unsafe.
+cppcheck = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --library=googletest --inline-suppr --quiet --error-exitcode=1 --project=build/gcc-debug/compile_commands.json -ibuild --suppress='*:*/demo_unsafe.cpp'", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
+# cppcheck over the demos only. Reports what it finds and never fails.
+cppcheck-unsafe = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --quiet --project=build/gcc-debug/compile_commands.json --file-filter='*demo_unsafe.cpp'", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
 # The template holds @ID@ placeholders, so it is not C++ yet: skip it.
 format = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format -i"
 format-check = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format --dry-run --Werror"

@@ -42,7 +42,8 @@ Alles draait via pixi, vanaf de root van de repo. Gebruik geen systeemcompiler.
 | Bouwen en testen, één preset | `pixi run test <preset>` |
 | Volledige controle | `pixi run check` |
 | clang-tidy | `pixi run tidy` |
-| cppcheck | `pixi run cppcheck` |
+| cppcheck over de veilige code (moet schoon zijn) | `pixi run cppcheck` |
+| cppcheck over de demo's (meting) | `pixi run cppcheck-unsafe` |
 | Opmaak toepassen / controleren | `pixi run format` / `pixi run format-check` |
 | Nieuw experiment | `pixi run new-experiment eNNN korte-naam` |
 
@@ -77,6 +78,11 @@ experimenten/eNNN-korte-naam/
   `WILL_FAIL` slaagt ook bij een crash om een andere reden.
 - Registreer geen test die afhangt van de uitkomst van ongedefinieerd gedrag zonder sanitizer.
   Die uitkomst verandert met compiler, vlaggen en geheugenindeling.
+- Heeft een demo ook een correcte variant, registreer die dan als controletest onder elke
+  preset. Die test bewijst dat het vangnet geen vals alarm geeft.
+- Een vals alarm in de veilige code onderdruk je zo klein mogelijk (`#pragma clang diagnostic`
+  binnen `#if defined(__clang__)`, of `// cppcheck-suppress <id>`). Zet de reden erbij en
+  noteer het vals alarm in het verslag. Het vals alarm is ook een meetresultaat.
 
 ## Onveilige code
 
@@ -128,3 +134,8 @@ experimenten/eNNN-korte-naam/
 - ASan heeft `llvm-symbolizer` nodig voor regelnummers in de meldingen van Clang. Pixi
   installeert het via `llvm-tools`.
 - Na een wijziging in `CMakePresets.json` of in een cache-variabele: `pixi run clean`.
+- Een vangnet dat met `abort()` stopt (de debug-modus van libstdc++), telt in CTest altijd als
+  fout, ook als `PASS_REGULAR_EXPRESSION` past. Draai zo'n demo via `sh -c "... || true"`.
+  ASan stopt met exitcode 1 en heeft dat niet nodig. Voorbeeld: `experimenten/e002-*/CMakeLists.txt`.
+- Een demo met `-D_GLIBCXX_DEBUG` mag niet linken met code die zonder die vlag is gebouwd. De
+  opbouw van `std::vector` verschilt dan.

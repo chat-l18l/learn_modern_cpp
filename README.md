@@ -96,7 +96,8 @@ Elke preset bouwt in `build/<preset>/`.
 | `pixi run test [preset]` | Bouwt en draait alle tests |
 | `pixi run check` | Draait `test` voor `gcc-debug`, `gcc-asan`, `clang-debug` en `clang-asan` |
 | `pixi run tidy` | Draait clang-tidy over `experimenten/` |
-| `pixi run cppcheck` | Draait cppcheck over `experimenten/` |
+| `pixi run cppcheck` | Draait cppcheck over de veilige code. Faalt bij een melding. |
+| `pixi run cppcheck-unsafe` | Draait cppcheck alleen over de demo's. Toont de meldingen en faalt nooit. |
 | `pixi run format` | Zet de code in de afgesproken opmaak |
 | `pixi run format-check` | Controleert de opmaak, zonder te wijzigen |
 | `pixi run new-experiment <id> <naam>` | Maakt een nieuw experiment uit het sjabloon |
@@ -125,6 +126,8 @@ De standaardpreset is `gcc-debug`.
 | Ongedefinieerd gedrag (UB) | Code waarvoor de C++-standaard geen uitkomst voorschrijft. Alles kan gebeuren, ook "het werkt". |
 | Vangnet | Een hulpmiddel dat een fout kan vinden: compilerwaarschuwing, statische analyse, sanitizer of test |
 | Sanitizer | Extra controles die de compiler in het programma bouwt. De controles draaien tijdens het uitvoeren. |
+| Debug-modus | Een versie van libstdc++ met controles op iterators. Aan met `-D_GLIBCXX_DEBUG`. Verandert de opbouw van de containers. |
+| Vals alarm | Een melding van een vangnet bij code die correct is |
 | ASan | AddressSanitizer. Vindt geheugen dat na vrijgeven of buiten de grenzen wordt gebruikt. |
 | UBSan | UndefinedBehaviorSanitizer. Vindt onder meer overflow van signed integers en foute casts. |
 | TSan | ThreadSanitizer. Vindt data races tussen threads. |
@@ -138,6 +141,7 @@ De standaardpreset is `gcc-debug`.
 | ID | Onderwerp | Catalogus | Wie vindt de fout | Verslag |
 | --- | --- | --- | --- | --- |
 | e001 | Hangende `std::string_view` naar een tijdelijke `std::string` | G01 | ASan altijd; Clang alleen met `[[clang::lifetimebound]]`; GCC, clang-tidy en cppcheck niet | [verslag](experimenten/e001-dangling-string-view/README.md) |
+| e002 | Referentie, iterator of range-for in een `std::vector` na `push_back` | G02 | ASan, cppcheck en Clang 23 altijd (de laatste twee ook vals bij `reserve`); debug-modus alleen iterators; GCC en clang-tidy niet | [verslag](experimenten/e002-vector-push-back/README.md) |
 
 ## Tests
 
@@ -146,7 +150,8 @@ Er zijn twee soorten tests. CTest draait beide.
 | Soort | Wat de test bewijst | Wanneer de test draait |
 | --- | --- | --- |
 | Unit test (GoogleTest) | De veilige vorm doet wat het verslag zegt | Bij elke preset |
-| Vangnet-test | De sanitizer vangt de onveilige demo. De test faalt als de fout ongemerkt doorgaat. | Alleen bij de preset met die sanitizer |
+| Vangnet-test | Een sanitizer of de debug-modus van libstdc++ vangt de onveilige demo. De test faalt als de fout ongemerkt doorgaat. | Alleen bij de preset met dat vangnet |
+| Controletest | Een correcte variant van de demo slaagt, ook onder een sanitizer. Zo blijkt dat het vangnet geen vals alarm geeft. | Bij elke preset |
 
 Een unit test die slaagt, bewijst niet dat de code veilig is. Experiment e001 laat dat zien: de
 onveilige demo met een korte string drukt zonder sanitizer het juiste woord af en eindigt met
