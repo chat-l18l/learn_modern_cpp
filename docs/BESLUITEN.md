@@ -23,6 +23,8 @@ verwijst naar het oude.
 | B13 | Extra waarschuwingen: `-Wcast-align`, `-Wdouble-promotion` | Besluit | 2026-11-22 |
 | B14 | Fase 5: code van anderen eerst controleren, dan pas gebruiken | Besluit | 2026-11-22 |
 | B15 | Eenvoud boven slimheid: regels voor templates, overloads, opbouw en commentaar | Besluit | 2026-11-22 |
+| B16 | Stackbudget per functie met `-Wframe-larger-than` | Besluit | 2026-11-22 |
+| B17 | De aanroeper alloceert; rekenwerk in pure functies | Besluit | 2026-11-22 |
 
 ---
 
@@ -223,3 +225,51 @@ ziet een fout sneller. De regel over overloads is gemeten: zie G27.
 **Wat geen hulpmiddel afdwingt:** de grens van drie types, de lengte van een functie, en de
 keuze tussen `virtual` en een `enum class`. Die regels bewaakt de review. De controles die wel
 bestaan, staan al aan via `.clang-tidy` en `cmake/leren.cmake`.
+
+### B16 — Stackbudget per functie met `-Wframe-larger-than`
+
+**Besluit (2026-11-22):** elk doel zonder `UNSAFE` en zonder `HOST` bouwt met
+`-Wframe-larger-than=${LEREN_FRAME_LIMIT}`, en dus met `-Werror`. `LEREN_FRAME_LIMIT` is een
+cache-variabele in `cmake/leren.cmake`, standaard **512 bytes**. De grens geldt alleen in de
+presets zonder sanitizer.
+
+**Waarom:** het ontwerpdoel is een stack van 4 KiB per taak. Met 512 bytes per functie past een
+keten van acht functies diep. e004 laat zien dat een capture by value van 4 KiB het stackframe
+verdubbelt, zonder dat de code dat laat zien. `-Wframe-larger-than` meldt dat tijdens het
+compileren, met GCC en met Clang.
+
+**Gemeten op 2026-11-22:**
+
+| Meting | Uitkomst |
+| --- | --- |
+| Grootste stackframe in de bibliotheekcode van e001–e004, `gcc-debug` | 128 bytes (`e004::counter_table_add`) |
+| Een geplante lokale `std::array<char, 600>` in `counter_tick` | De bouw stopt: `frame size of 624 bytes is larger than 512 bytes` |
+| Testbestanden, `gcc-debug` | 1120–1600 bytes in `__static_initialization_and_destruction_0`: de registratie van de tests door GoogleTest |
+| `std::vector<int>::_M_realloc_append` onder `clang-asan` | 536 bytes. Zonder ASan binnen 512. |
+
+**Gevolg:**
+
+- Tests krijgen de markering `HOST` en vallen buiten het budget. Ze draaien niet op het apparaat.
+- Het budget geldt niet in de presets met een sanitizer.
+- Het budget geldt per functie. Het totaal langs de diepste keten van aanroepen vraagt
+  `-fcallgraph-info=su` (GCC). Dat is nog niet gemeten.
+- Meet het echte budget met de compiler en de optimalisatie van het apparaat. Onder `-O2`
+  verdwenen in e004 hele buffers.
+
+### B17 — De aanroeper alloceert; rekenwerk in pure functies
+
+**Besluit (2026-11-22):** de regels in `AGENTS.md`, paragraaf "Geheugen en stack: de
+aanroeper alloceert".
+
+1. Een functie alloceert geen buffers en geeft geen eigen container terug. De aanroeper
+   alloceert en geeft de buffer mee als `std::span`.
+2. Grote gegevens staan in `static` opslag of in een struct die de eigenaar is.
+3. Rekenwerk staat in pure functies. Invoer en uitvoer staan in weinig, duidelijk benoemde
+   functies.
+
+**Waarom:** het geheugengebruik is dan vooraf bekend en zichtbaar in de code. Er is geen
+verborgen heap-allocatie (zoals `std::function` in e004), en geen grote kopie op de stack. Een
+pure functie is eenvoudig te testen: dezelfde invoer geeft dezelfde uitkomst.
+
+**Gevolg:** de code in e001–e004 volgt deze regel niet overal. Die code blijft staan als
+studiemateriaal. Nieuwe code volgt de regel.

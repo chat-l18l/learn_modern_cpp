@@ -143,11 +143,39 @@ Code moet een lezer in één keer begrijpen, ook een agent. Besluit B15.
 | Data in een eenvoudige `struct`, logica in vrije functies. | – | review |
 | `virtual` alleen voor echte runtime-polymorfie met een open verzameling types. Een gesloten verzameling is een `enum class` met een `switch`, of een `std::variant`. | – | review |
 | Een klasse met `virtual` heeft een `virtual` of `protected` destructor. Geef een object van zo'n klasse nooit by value door. | – | `-Wnon-virtual-dtor`; clang-tidy `cppcoreguidelines-virtual-class-destructor` en `cppcoreguidelines-slicing` |
+| Een lambda die ontsnapt (teruggegeven, in een `std::function`, als callback) vangt niets by reference en gebruikt geen `[=]` in een lidfunctie. Toestand die langer leeft dan één aanroep wordt een struct met een vrije functie, in een tabel die de eigenaar is. | Een lambda die direct draait binnen de scope (`std::sort`, `std::ranges::for_each`) mag `[&]` gebruiken | Clang `-Wlifetime-safety`, `-Wdeprecated`; clang-tidy `clang-analyzer-core.StackAddressEscape`, `cppcoreguidelines-misleading-capture-default-by-value`; cppcheck (e004) |
+| Een struct met toestand die op een apparaat met weinig geheugen draait, krijgt een `static_assert` op `sizeof`. | – | compiler (e004) |
 | Commentaar legt uit waarom, en wat het contract is. Geen commentaar dat herhaalt wat de code al zegt. | In een demo of een experiment mag commentaar het mechanisme uitleggen: dat is de les. | review |
 
 Overloads zijn een bron van fouten, geen kwestie van smaak. Gemeten op 2026-11-22, met
 `void log_it(bool)` en `void log_it(const std::string &)`: `log_it("hello")` roept de
 `bool`-versie aan. GCC 15 meldt niets, ook niet met alle waarschuwingen. Zie catalogus G27.
+
+### Geheugen en stack: de aanroeper alloceert
+
+Het ontwerpdoel is een stack van 4 KiB per taak. Op de stack staan parameters, referenties en
+kleine lokale waarden. Grote gegevens staan er niet. Besluiten B16 en B17.
+
+| Regel | Wat de regel bewaakt |
+| --- | --- |
+| Een functie alloceert geen buffers. De aanroeper alloceert en geeft de buffer mee als `std::span<T>` (schrijven) of `std::span<const T>` (lezen). | review |
+| Een functie geeft geen eigen container terug (`std::string`, `std::vector`). Het resultaat gaat in een buffer van de aanroeper; de functie geeft terug hoeveel ze schreef, of een fout via `std::expected`. | review |
+| Grote gegevens staan in `static` opslag of in een struct die de eigenaar is, niet in een lokale variabele. | `-Wframe-larger-than` |
+| Elke functie past in het stackbudget van `LEREN_FRAME_LIMIT` (512 bytes). | `-Wframe-larger-than=512` met `-Werror`, in de presets zonder sanitizer |
+| Rekenwerk staat in pure functies: de uitkomst hangt alleen af van de parameters, en de functie schrijft alleen in de buffers die ze meekrijgt. Invoer en uitvoer (bestanden, hardware, tijd) staan in weinig functies met een duidelijke naam. | review |
+| Een struct met toestand krijgt een `static_assert` op `sizeof`. | compiler |
+
+Uitzonderingen op het stackbudget:
+
+| Doel | Waarom |
+| --- | --- |
+| Tests (`leren_gtest`, markering `HOST`) | Draaien alleen op de ontwikkelmachine. GoogleTest registreert alle tests van een bestand in één functie van 1–1,6 KiB. |
+| Demo's (`UNSAFE`) | Hun meldingen zijn meetgegevens |
+| Presets met een sanitizer | ASan maakt stackframes groter. Een apparaat draait niet met ASan. |
+
+De code in e001–e004 dateert van vóór deze regel. `e001::first_word_copy` geeft een
+`std::string` terug en `e002::append_evens` laat de vector groeien. Die code blijft staan als
+studiemateriaal. Nieuwe code volgt de regel.
 
 ## Schrijfstijl van documenten
 
@@ -185,5 +213,13 @@ Overloads zijn een bron van fouten, geen kwestie van smaak. Gemeten op 2026-11-2
   opbouw van `std::vector` verschilt dan.
 - Ninja bouwt alleen wat veranderd is. Een tweede bouw toont dus de waarschuwingen niet meer.
   `pixi run audit` bouwt daarom altijd opnieuw (`--clean-first`).
+- Een meting van waarschuwingen of stackframes vraagt een schone bouw: eerst `pixi run clean`.
+  Een bouw die niets opnieuw compileert, toont geen enkele melding en lijkt dan schoon.
+- Plant je een fout om een vangnet te bewijzen, zet de wijziging dan terug met de hand of met
+  `git checkout -- <bestand>`. Het tweede werkt alleen als het bestand al in Git staat.
+- Vervang de globale `operator new` niet in een binary die onder een sanitizer draait. ASan
+  vervangt `operator new` zelf, en de twee mengen: `alloc-dealloc-mismatch` (e004).
+- Een stackmeting (`-fstack-usage`) zegt alleen iets bij de optimalisatie van het doel. Onder
+  `-O2` kan een buffer verdwijnen. Onder ASan staat er `dynamic` (e004).
 - cppcheck houdt geen rekening met `-isystem`. De taak `cppcheck` slaat `vreemd/` daarom over
   met `--suppress`. Een padpatroon voor `--suppress` begint zonder `/`: `'*:*vreemd/*'`.

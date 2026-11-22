@@ -86,7 +86,9 @@ pixi run check
 | `clang-tsan` | Clang 23 | `-O0` | ThreadSanitizer |
 | `clang-audit` | Clang 23 | `-O0` | Code van anderen als eigen code, plus `-Wunsafe-buffer-usage`. Nooit `-Werror`. |
 
-Elke preset bouwt in `build/<preset>/`. De veilige code bouwt met `-Werror`. De demo's met
+Elke preset bouwt in `build/<preset>/`. De veilige code bouwt met `-Werror`. In de presets
+zonder sanitizer heeft de veilige code ook een stackbudget van 512 bytes per functie
+(`-Wframe-larger-than`). Tests vallen buiten dat budget. De demo's met
 ongedefinieerd gedrag bouwen zonder `-Werror`: hun waarschuwingen zijn meetgegevens.
 
 ### Taken
@@ -136,6 +138,9 @@ De standaardpreset is `gcc-debug`.
 | Audit | Een controle van code van anderen met alle waarschuwingen en analyses, voordat het project de code gebruikt |
 | Blinde vlek | Een fout die een vangnet aantoonbaar niet ziet |
 | Wrapper | Eigen code die de enige toegang is tot code van anderen, en die alle voorwaarden controleert |
+| Stackbudget | Het maximale stackframe van één functie. Hier 512 bytes, voor een stack van 4 KiB per taak. |
+| Pure functie | Een functie waarvan de uitkomst alleen van de parameters afhangt, en die alleen schrijft in de buffers die ze meekrijgt |
+| Closure-object | Het object dat een lambda-expressie maakt. Elke capture is een lid van dat object. |
 | ASan | AddressSanitizer. Vindt geheugen dat na vrijgeven of buiten de grenzen wordt gebruikt. |
 | UBSan | UndefinedBehaviorSanitizer. Vindt onder meer overflow van signed integers en foute casts. |
 | TSan | ThreadSanitizer. Vindt data races tussen threads. |
@@ -151,6 +156,7 @@ De standaardpreset is `gcc-debug`.
 | e001 | Hangende `std::string_view` naar een tijdelijke `std::string` | G01 | ASan altijd; Clang alleen met `[[clang::lifetimebound]]`; GCC, clang-tidy en cppcheck niet | [verslag](experimenten/e001-dangling-string-view/README.md) |
 | e002 | Referentie, iterator of range-for in een `std::vector` na `push_back` | G02 | ASan, cppcheck en Clang 23 altijd (de laatste twee ook vals bij `reserve`); debug-modus alleen iterators; GCC en clang-tidy niet | [verslag](experimenten/e002-vector-push-back/README.md) |
 | e003 | Code van anderen: verborgen waarschuwingen en blinde vlekken | G24, G25, G26 | Gewone bouw niets (`-isystem`); `clang-audit` vindt 2 van 4 fouten precies; ASan alleen in code die uit de bron is gebouwd | [verslag](experimenten/e003-code-van-anderen/README.md) |
+| e004 | Lambda met `[&]` of `[=]` die langer leeft dan wat ze vangt; waar captures staan en wat ze aan stack kosten | G03 | ASan, cppcheck, clang-tidy en Clang 23 altijd; GCC alleen `[=]` met `this` | [verslag](experimenten/e004-lambda-capture/README.md) |
 
 ## Tests
 

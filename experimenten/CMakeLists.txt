@@ -2,3 +2,4 @@
 add_subdirectory(e001-dangling-string-view)
 add_subdirectory(e002-vector-push-back)
 add_subdirectory(e003-code-van-anderen)
+add_subdirectory(e004-lambda-capture)

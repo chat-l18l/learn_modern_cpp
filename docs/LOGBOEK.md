@@ -5,6 +5,78 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 6: stackbudget en "de aanroeper alloceert" (B16, B17)
+
+**Gedaan:**
+
+1. B16: `LEREN_FRAME_LIMIT` (512 bytes) in `cmake/leren.cmake`. De veilige code bouwt met
+   `-Wframe-larger-than=512` en `-Werror`, in de presets zonder sanitizer.
+2. `leren_target()` kreeg de markering `HOST` voor tests. `leren_gtest()` gebruikt die.
+3. B17: de ontwerpregel "de aanroeper alloceert, rekenwerk in pure functies" in AGENTS.md.
+
+**Gemeten:**
+
+- De grootste functie in de bibliotheekcode gebruikt 128 bytes (`gcc-debug`).
+- Een geplante lokale buffer van 600 bytes stopt de bouw.
+- De testbestanden gebruiken 1120–1600 bytes in de registratie van GoogleTest.
+- Onder `clang-asan` gebruikt `std::vector<int>::_M_realloc_append` 536 bytes.
+- `pixi run check` slaagt, ook `gcc-release`, `clang-tsan`, cppcheck, format-check en de audit.
+
+**Gevonden tijdens het werk:**
+
+- De eerste meting bouwde niet opnieuw en liet daarom geen enkele overschrijding zien. Een
+  meting van waarschuwingen vraagt altijd een schone bouw.
+- Een test met een geplante fout terugdraaien met `git checkout` werkt niet op een bestand dat
+  nog niet in Git staat. Teruggedraaid met de hand.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+- Het totale stackgebruik langs een keten van aanroepen (`-fcallgraph-info=su`) is nog niet
+  gemeten.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
+## 2026-11-22 — Stap 5: experiment e004, lambda-captures (G03)
+
+**Gedaan:**
+
+1. Experiment e004 met twee ontsnappende lambda's: `[&count]` die de functie verlaat, en `[=]`
+   die `this` vangt.
+2. Metingen van `sizeof` van closures, van heap-gebruik door `std::function`, en van het
+   stackgebruik met `-fstack-usage` en `-Wframe-larger-than=1024`.
+3. Een transparant alternatief: struct `Counter`, functie `counter_tick`, tabel `Counter_table`
+   met vaste grootte en `static_assert`.
+4. Een regel voor lambda's in AGENTS.md ("Eenvoud boven slimheid"), twee valkuilen, en
+   voorstel B16 (stackbudget per functie).
+
+**Gemeten:**
+
+- `pixi run check` slaagt: 41 tests zonder sanitizer, 46 met ASan, per compiler.
+- ASan, cppcheck, clang-tidy en Clang 23 vinden beide fouten. GCC 15 meldt alleen `[=]` met `this`.
+- Zonder sanitizer geeft `gcc-debug` bij beide fouten het juiste antwoord.
+- `[&x]` kost 8 bytes. `std::function` gebruikt de heap boven 16 bytes aan captures.
+- `[buffer]` met 4 KiB: stackframe 8208 bytes; `[&buffer]`: 4128 bytes; `static` buffer: 16 bytes.
+
+**Gevonden tijdens het werk:**
+
+- `-Werror` (B12) stopte de bouw op een test: een `const int` met een vaste waarde hoeft niet
+  gevangen te worden, en Clang meldt `-Wunused-lambda-capture`.
+- Het vervangen van `operator new` botst met ASan. De heap-meting draait alleen zonder sanitizer.
+- ASan vangt `stack-use-after-return` nu standaard; de optie `detect_stack_use_after_return=1`
+  is niet nodig.
+- cppcheck gaf vals alarm (`duplicateExpression`) op de teller die `operator new` verhoogt.
+
+**Open:**
+
+- B10, B11 en B16 wachten op een besluit.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
 ## 2026-11-22 — Stap 4: regels voor eenvoudige code (B15)
 
 **Gedaan:**
