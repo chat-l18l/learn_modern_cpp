@@ -119,6 +119,33 @@ Acceptatie:
   voor zover een hulpmiddel ze kan zien. Het verslag noemt de fouten die geen hulpmiddel ziet.
 - Het protocol in `AGENTS.md` verwijst voor elke regel naar een meting.
 
+## Fase 6 — Principes toetsen aan code uit de praktijk
+
+**Status:** gepland. Besluit B18.
+
+Doel:
+
+- De principes uit [PRINCIPES.md](PRINCIPES.md) toetsen aan code die je in de praktijk tegenkomt:
+  voorbeelden van GitHub, "slimme" trucs, en code met diepe abstracties.
+
+Taken:
+
+1. Kies een klein, typisch voorbeeld met een verborgen control flow of een gemengde data flow.
+   Leg de herkomst vast.
+2. Beantwoord de [auditvragen](AUDITVRAGEN.md) over het origineel.
+3. Herschrijf het voorbeeld volgens P1–P5, met hetzelfde gedrag en dezelfde tests.
+4. Meet het verschil: meldingen van compiler, clang-tidy, cppcheck en ASan; de auditvragen
+   zonder aanwijsbaar antwoord; de grootte van de stackframes; het aantal bestanden dat een
+   lezer moet openen om de data flow te volgen.
+5. Zet het actormodel ernaast als alternatief: eigenaarschap per actor, control flow via
+   berichten.
+
+Acceptatie:
+
+- P3 en P4 hebben de status "vastgesteld", of het verslag legt uit waarom niet.
+- Het verslag noemt minstens één punt waarop het origineel beter is dan de herschrijving, of
+  zegt expliciet dat er geen is.
+
 ## Later
 
 | Onderwerp | Waarom later |

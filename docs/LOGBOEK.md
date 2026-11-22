@@ -5,6 +5,30 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 7: twee doelen, principes en auditvragen (B18)
+
+**Gedaan:**
+
+1. Het doel in `README.md` herschreven naar twee doelen: leren hoe C++ misgaat, en
+   ontwerpprincipes vastleggen als regels die je kunt toetsen.
+2. `docs/PRINCIPES.md` gemaakt met P1–P6. Elk principe heeft een regel, een reden, een toets en
+   bewijs.
+3. `docs/AUDITVRAGEN.md` gemaakt met A1–A16, per principe.
+4. De regeltabellen uit `AGENTS.md` naar `docs/PRINCIPES.md` verplaatst. `AGENTS.md` heeft nu
+   een samenvatting en een verwijzing.
+5. Besluit B18 en fase 6 (principes toetsen aan code uit de praktijk) toegevoegd.
+
+**Status van de principes:** P1, P2, P5 en P6 vastgesteld. P3 en P4 werkhypothese: P3 heeft
+alleen een voorlopige meting (G27), P4 nog geen experiment.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
 ## 2026-11-22 — Stap 6: stackbudget en "de aanroeper alloceert" (B16, B17)
 
 **Gedaan:**

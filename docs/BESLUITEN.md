@@ -25,6 +25,7 @@ verwijst naar het oude.
 | B15 | Eenvoud boven slimheid: regels voor templates, overloads, opbouw en commentaar | Besluit | 2026-11-22 |
 | B16 | Stackbudget per functie met `-Wframe-larger-than` | Besluit | 2026-11-22 |
 | B17 | De aanroeper alloceert; rekenwerk in pure functies | Besluit | 2026-11-22 |
+| B18 | Ontwerpprincipes en auditvragen als eigen documenten | Besluit | 2026-11-22 |
 
 ---
 
@@ -208,7 +209,8 @@ pixi of conda is ook al gebouwd, dus zonder ASan.
 ### B15 — Eenvoud boven slimheid
 
 **Besluit (2026-11-22):** de regels in `AGENTS.md`, paragraaf "Eenvoud boven slimheid". De
-bron is een gevonden richtlijn voor agents. Vier regels zijn overgenomen. Twee regels zijn
+bron is een gevonden richtlijn voor agents. **Verplaatst op 2026-11-22** naar
+[PRINCIPES.md](PRINCIPES.md), P3 en P4 (B18). Vier regels zijn overgenomen. Twee regels zijn
 aangepast.
 
 | Regel uit de richtlijn | Wat we ermee doen |
@@ -259,7 +261,8 @@ compileren, met GCC en met Clang.
 ### B17 — De aanroeper alloceert; rekenwerk in pure functies
 
 **Besluit (2026-11-22):** de regels in `AGENTS.md`, paragraaf "Geheugen en stack: de
-aanroeper alloceert".
+aanroeper alloceert". **Verplaatst op 2026-11-22** naar [PRINCIPES.md](PRINCIPES.md), P1 en P5
+(B18).
 
 1. Een functie alloceert geen buffers en geeft geen eigen container terug. De aanroeper
    alloceert en geeft de buffer mee als `std::span`.
@@ -273,3 +276,23 @@ pure functie is eenvoudig te testen: dezelfde invoer geeft dezelfde uitkomst.
 
 **Gevolg:** de code in e001–e004 volgt deze regel niet overal. Die code blijft staan als
 studiemateriaal. Nieuwe code volgt de regel.
+
+### B18 — Ontwerpprincipes en auditvragen als eigen documenten
+
+**Besluit (2026-11-22):** het project heeft twee doelen: leren hoe C++ misgaat, en
+ontwerpprincipes vastleggen als regels die je kunt toetsen. De principes staan in
+[PRINCIPES.md](PRINCIPES.md) (P1–P6), de vragen voor een audit in
+[AUDITVRAGEN.md](AUDITVRAGEN.md) (A1–A16). De regeltabellen uit `AGENTS.md` (B15, B17) zijn
+daarheen verplaatst. `AGENTS.md` verwijst ernaar.
+
+**Waarom:** de regels stonden verspreid over besluiten en een bestand voor agents. Daar zijn ze
+niet mee te nemen naar andere projecten, en niet te gebruiken bij een audit. In een eigen
+document heeft elk principe een regel, een reden, een toets en bewijs.
+
+**Gevolg:**
+
+1. Een principe is "vastgesteld" als het een toets heeft en minstens één verwijzing naar bewijs.
+   Anders is het een "werkhypothese". Op 2026-11-22: P1, P2, P5 en P6 vastgesteld; P3 en P4
+   werkhypothese.
+2. Na elk experiment volgt de vraag: bevestigt, verandert of weerlegt het een principe?
+3. Fase 6 van het [plan](PLAN.md) toetst de principes aan code uit de praktijk.

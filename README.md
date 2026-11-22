@@ -1,20 +1,47 @@
 # C++ opnieuw leren
 
-Dit project is een werkplaats om modern C++ te leren. Het uitgangspunt is C++-ervaring van
-twintig jaar geleden. Het doel is niet om alle nieuwe taalregels te kennen. Het doel is om de
-constructies te **herkennen** die nog steeds onveilig zijn, en om te weten welk gereedschap ze
-vindt.
+Dit project is een werkplaats met twee doelen. Het eerste doel is leren hoe modern C++ misgaat:
+de constructies die nog steeds onveilig zijn, en het gereedschap dat ze vindt. Het tweede doel
+is ervaring met betrouwbare, eenvoudige systemen vastleggen als ontwerpprincipes die je kunt
+toetsen. Het uitgangspunt is C++-ervaring van twintig jaar geleden, en ervaring als embedded
+designer en software engineer.
 
 ## Doel
+
+### 1. Herkennen hoe C++ misgaat
 
 1. Herken in code de constructies die ongedefinieerd gedrag geven of die een test niet ziet.
 2. Weet per constructie welk vangnet de fout vindt: de compiler, statische analyse, een
    sanitizer, of niets.
 3. Ken per constructie het veilige alternatief in C++23.
-4. Leg elke stap vast, zodat de kennis terug te lezen is.
 
 Een experiment is klaar als het antwoord op vraag 1, 2 en 3 in het verslag staat, met gemeten
 uitkomsten. Een verwachting is geen uitkomst.
+
+### 2. Ontwerpprincipes vastleggen als regels die je kunt toetsen
+
+1. Leg de principes vast in [docs/PRINCIPES.md](docs/PRINCIPES.md): data en control flow
+   gescheiden, één eigenaar per stuk data, expliciete control flow, minimale abstractie, vast
+   geheugengebruik, en code van anderen achter één grens.
+2. Geef elk principe een toets: een hulpmiddel, of een vraag uit
+   [docs/AUDITVRAGEN.md](docs/AUDITVRAGEN.md).
+3. Onderbouw elk principe met bewijs uit een experiment.
+4. Maak de principes bruikbaar buiten dit project: om code en architectuur van andere projecten
+   te toetsen, ook code van anderen.
+
+Een principe is vastgesteld als het een toets heeft en minstens één verwijzing naar bewijs.
+
+### Hoe de twee doelen samenhangen
+
+| Richting | Voorbeeld |
+| --- | --- |
+| Een experiment levert bewijs voor een principe | e004 liet zien dat een callback met `[&]` data, eigenaar en levensduur verbergt. Dat onderbouwt P1 en P2. |
+| Een experiment levert een nieuwe regel op | e004 leidde tot het stackbudget van 512 bytes per functie (P5) |
+| Een principe bepaalt welk alternatief een experiment kiest | De veilige vorm in e004 is een struct en een tabel met vaste grootte, geen `std::function` |
+
+### Vastleggen
+
+Elke stap staat in het [logboek](docs/LOGBOEK.md), zodat de kennis terug te lezen is.
 
 ## Werkwijze
 
@@ -28,12 +55,16 @@ We werken stap voor stap. Eén stap is één experiment of één wijziging aan d
 6. Schrijf het resultaat en de conclusie in het verslag.
 7. Werk de catalogus, het [logboek](docs/LOGBOEK.md) en zo nodig de [besluiten](docs/BESLUITEN.md)
    bij.
-8. Maak één commit voor de stap.
+8. Bevestigt, verandert of weerlegt het experiment een principe? Werk dan
+   [docs/PRINCIPES.md](docs/PRINCIPES.md) bij.
+9. Maak één commit voor de stap.
 
 | Wat | Waar |
 | --- | --- |
 | Wat we gaan doen, in fasen | [docs/PLAN.md](docs/PLAN.md) |
 | Lijst van onveilige constructies, met status | [docs/CATALOGUS.md](docs/CATALOGUS.md) |
+| Ontwerpprincipes, met toets en bewijs | [docs/PRINCIPES.md](docs/PRINCIPES.md) |
+| Vragen voor een audit of review | [docs/AUDITVRAGEN.md](docs/AUDITVRAGEN.md) |
 | Genomen besluiten en voorstellen | [docs/BESLUITEN.md](docs/BESLUITEN.md) |
 | Wat er per werksessie gebeurde | [docs/LOGBOEK.md](docs/LOGBOEK.md) |
 | Afspraken voor AI-agents | [AGENTS.md](AGENTS.md) |
@@ -146,7 +177,12 @@ De standaardpreset is `gcc-debug`.
 | TSan | ThreadSanitizer. Vindt data races tussen threads. |
 | Statische analyse | Een programma dat de broncode leest zonder de code uit te voeren: clang-tidy, cppcheck |
 | Hangende view | Een `std::string_view` of `std::span` die naar geheugen wijst dat niet meer bestaat |
-| Eigenaar | Het object dat geheugen vrijgeeft als het object verdwijnt, bijvoorbeeld `std::string` |
+| Eigenaar | Het object dat het geheugen van data beheert en de data als enige mag veranderen, bijvoorbeeld een `std::string` of een tabel met vaste grootte |
+| Data flow | De weg die data aflegt: waar data ontstaat, welke transformaties haar veranderen, en waar zij eindigt |
+| Control flow | De beslissingen: wat er wanneer gebeurt, en waarom |
+| Transformatie | Een functie die data in een nieuwe vorm brengt, bij voorkeur een pure functie |
+| Invariant | Een voorwaarde die voor data altijd moet gelden, bijvoorbeeld `used <= capacity` |
+| Principe | Een ontwerpregel met een reden, een toets en bewijs. Zie [docs/PRINCIPES.md](docs/PRINCIPES.md). |
 | Vangnet-test | Een test die slaagt als een sanitizer de onveilige demo vangt |
 
 ## Experimenten
