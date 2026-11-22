@@ -12,10 +12,10 @@ target_link_libraries(e002_test PRIVATE e002_grow)
 # mode changes the layout of std::vector, and must not meet code built
 # without it.
 add_executable(e002_demo_unsafe demo_unsafe.cpp)
-leren_target(e002_demo_unsafe)
+leren_target(e002_demo_unsafe UNSAFE)
 
 add_executable(e002_demo_unsafe_debugmode demo_unsafe.cpp)
-leren_target(e002_demo_unsafe_debugmode)
+leren_target(e002_demo_unsafe_debugmode UNSAFE)
 target_compile_definitions(e002_demo_unsafe_debugmode PRIVATE _GLIBCXX_DEBUG)
 
 # Control: `spare` is correct code. It must succeed under every preset, also

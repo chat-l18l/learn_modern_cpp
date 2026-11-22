@@ -5,6 +5,70 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 3: B12–B14 uitgevoerd, experiment e003 (G24–G26)
+
+**Gedaan:**
+
+1. B12: `leren_target(<doel> [UNSAFE])`. De veilige code bouwt met `-Werror`, de demo's niet.
+2. B13: `-Wcast-align` en `-Wdouble-promotion` toegevoegd.
+3. B14: bibliotheek `vreemd/minilib` met vier geplante fouten, preset `clang-audit`, taken
+   `audit-build` en `audit`, en de doelen `minilib` en `minilib_prebuilt`.
+4. Experiment e003 met een wrapper om `minilib`, unit tests, vangnet-tests en een
+   blinde-vlek-test.
+5. AGENTS.md: regels voor `UNSAFE`, voor code van anderen, en drie nieuwe valkuilen.
+
+**Gemeten:**
+
+- `pixi run check` slaagt: 29 tests zonder sanitizer, 36 met ASan, per compiler.
+- `-Werror` werkt: een geplante ongebruikte variabele stopt de bouw.
+- De gewone bouw geeft 0 waarschuwingen over `minilib`. `clang-audit` vindt V1 en V3 precies,
+  en wijst V2 en V4 aan als rauwe pointer-index.
+- ASan ziet V4 niet in de al gebouwde bibliotheek. V2 ziet ASan wel, omdat `ml_sum` `inline` is.
+- V3 is geen ongedefinieerd gedrag. Alleen de audit en `-fsanitize=implicit-conversion` zien V3.
+
+**Gevonden tijdens het werk:**
+
+- In de audit maakte `-Werror` de bouw kapot op de fouten van `minilib`. De audit gebruikt nu
+  nooit `-Werror`.
+- cppcheck negeert `-isystem` en vond `minilib` via de wrapper. De taak `cppcheck` slaat
+  `vreemd/` nu over.
+- clang-tidy stelde `std::in_range` (C++20) voor in plaats van een eigen grenscontrole. Overgenomen.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+- Fase 5, taak 3 en 4: fuzz-test en het protocol voor code van anderen.
+
+**Volgende stap:** G03, of fase 5 afmaken met een fuzz-test.
+
+---
+
+## 2026-11-22 — Stap 2: een richtlijn voor agents bekeken
+
+**Gedaan:**
+
+1. Een gevonden richtlijn voor C++-agents vergeleken met onze opzet.
+2. De beweringen uit de richtlijn en drie risico's van code van anderen gemeten, in een losse
+   map buiten de repo. Nog geen experiment.
+3. Voorstellen B12–B14, catalogusregels G22–G26 en fase 5 in het plan vastgelegd.
+
+**Gemeten:**
+
+- `-Wlifetime` bestaat niet in GCC 15 en Clang 23. Met GCC stopt de build.
+- UBSan zonder `-fno-sanitize-recover=all`: de fout staat in de uitvoer, het programma eindigt
+  met exitcode 0.
+- Een header via `-isystem` geeft geen enkele waarschuwing meer (GCC 2 → 0, Clang 4 → 0).
+- ASan ziet niet dat een bibliotheek zonder ASan buiten een array leest.
+- Clang `-Wunsafe-buffer-usage` meldt indexeren via een rauwe pointer tijdens het compileren.
+
+**Open:**
+
+- B10–B14 wachten op een besluit.
+
+**Volgende stap:** afhankelijk van het besluit: B12–B14 uitvoeren, of G03.
+
+---
+
 ## 2026-11-22 — Stap 1: experiment e002, `push_back` en referenties (G02)
 
 **Gedaan:**

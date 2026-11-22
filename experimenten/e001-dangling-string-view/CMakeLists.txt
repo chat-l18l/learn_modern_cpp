@@ -9,7 +9,7 @@ target_link_libraries(e001_test PRIVATE e001_first_word)
 
 # The demo has undefined behaviour on purpose.
 add_executable(e001_demo_unsafe demo_unsafe.cpp)
-leren_target(e001_demo_unsafe)
+leren_target(e001_demo_unsafe UNSAFE)
 target_link_libraries(e001_demo_unsafe PRIVATE e001_first_word)
 
 # Under AddressSanitizer the demo must be caught. Each test passes when ASan

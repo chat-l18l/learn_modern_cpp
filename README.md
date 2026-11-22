@@ -84,8 +84,10 @@ pixi run check
 | `clang-debug` | Clang 23 | `-O0` | geen |
 | `clang-asan` | Clang 23 | `-O0` | AddressSanitizer en UndefinedBehaviorSanitizer |
 | `clang-tsan` | Clang 23 | `-O0` | ThreadSanitizer |
+| `clang-audit` | Clang 23 | `-O0` | Code van anderen als eigen code, plus `-Wunsafe-buffer-usage`. Nooit `-Werror`. |
 
-Elke preset bouwt in `build/<preset>/`.
+Elke preset bouwt in `build/<preset>/`. De veilige code bouwt met `-Werror`. De demo's met
+ongedefinieerd gedrag bouwen zonder `-Werror`: hun waarschuwingen zijn meetgegevens.
 
 ### Taken
 
@@ -98,6 +100,7 @@ Elke preset bouwt in `build/<preset>/`.
 | `pixi run tidy` | Draait clang-tidy over `experimenten/` |
 | `pixi run cppcheck` | Draait cppcheck over de veilige code. Faalt bij een melding. |
 | `pixi run cppcheck-unsafe` | Draait cppcheck alleen over de demo's. Toont de meldingen en faalt nooit. |
+| `pixi run audit` | Bouwt `clang-audit` opnieuw en draait clang-tidy en cppcheck over `vreemd/`. Toont alle meldingen en faalt nooit. |
 | `pixi run format` | Zet de code in de afgesproken opmaak |
 | `pixi run format-check` | Controleert de opmaak, zonder te wijzigen |
 | `pixi run new-experiment <id> <naam>` | Maakt een nieuw experiment uit het sjabloon |
@@ -115,6 +118,7 @@ De standaardpreset is `gcc-debug`.
 | `cmake/leren.cmake` | Waarschuwingen en sanitizer-vlaggen voor elk doel |
 | `experimenten/` | Eén map per experiment |
 | `experimenten/_sjabloon/` | Het sjabloon voor een nieuw experiment |
+| `vreemd/` | Code van anderen, met geplante fouten. Zie [vreemd/README.md](vreemd/README.md). |
 | `docs/` | Plan, catalogus, besluiten en logboek |
 | `tools/` | Hulpscripts |
 | `.clang-tidy`, `.clang-format`, `.clangd` | Instellingen voor statische analyse, opmaak en editor |
@@ -128,6 +132,10 @@ De standaardpreset is `gcc-debug`.
 | Sanitizer | Extra controles die de compiler in het programma bouwt. De controles draaien tijdens het uitvoeren. |
 | Debug-modus | Een versie van libstdc++ met controles op iterators. Aan met `-D_GLIBCXX_DEBUG`. Verandert de opbouw van de containers. |
 | Vals alarm | Een melding van een vangnet bij code die correct is |
+| Code van anderen | Code die het project overneemt en niet zelf schrijft: een bibliotheek, een pakket, gekopieerde code |
+| Audit | Een controle van code van anderen met alle waarschuwingen en analyses, voordat het project de code gebruikt |
+| Blinde vlek | Een fout die een vangnet aantoonbaar niet ziet |
+| Wrapper | Eigen code die de enige toegang is tot code van anderen, en die alle voorwaarden controleert |
 | ASan | AddressSanitizer. Vindt geheugen dat na vrijgeven of buiten de grenzen wordt gebruikt. |
 | UBSan | UndefinedBehaviorSanitizer. Vindt onder meer overflow van signed integers en foute casts. |
 | TSan | ThreadSanitizer. Vindt data races tussen threads. |
@@ -142,6 +150,7 @@ De standaardpreset is `gcc-debug`.
 | --- | --- | --- | --- | --- |
 | e001 | Hangende `std::string_view` naar een tijdelijke `std::string` | G01 | ASan altijd; Clang alleen met `[[clang::lifetimebound]]`; GCC, clang-tidy en cppcheck niet | [verslag](experimenten/e001-dangling-string-view/README.md) |
 | e002 | Referentie, iterator of range-for in een `std::vector` na `push_back` | G02 | ASan, cppcheck en Clang 23 altijd (de laatste twee ook vals bij `reserve`); debug-modus alleen iterators; GCC en clang-tidy niet | [verslag](experimenten/e002-vector-push-back/README.md) |
+| e003 | Code van anderen: verborgen waarschuwingen en blinde vlekken | G24, G25, G26 | Gewone bouw niets (`-isystem`); `clang-audit` vindt 2 van 4 fouten precies; ASan alleen in code die uit de bron is gebouwd | [verslag](experimenten/e003-code-van-anderen/README.md) |
 
 ## Tests
 
@@ -152,6 +161,7 @@ Er zijn twee soorten tests. CTest draait beide.
 | Unit test (GoogleTest) | De veilige vorm doet wat het verslag zegt | Bij elke preset |
 | Vangnet-test | Een sanitizer of de debug-modus van libstdc++ vangt de onveilige demo. De test faalt als de fout ongemerkt doorgaat. | Alleen bij de preset met dat vangnet |
 | Controletest | Een correcte variant van de demo slaagt, ook onder een sanitizer. Zo blijkt dat het vangnet geen vals alarm geeft. | Bij elke preset |
+| Blinde-vlek-test | Een vangnet ziet een fout aantoonbaar niet. De test faalt als het vangnet de fout later wel ziet; dan moet het verslag worden bijgewerkt. | Alleen bij de preset met dat vangnet |
 
 Een unit test die slaagt, bewijst niet dat de code veilig is. Experiment e001 laat dat zien: de
 onveilige demo met een korte string drukt zonder sanitizer het juiste woord af en eindigt met

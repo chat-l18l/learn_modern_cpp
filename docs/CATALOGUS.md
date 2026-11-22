@@ -55,3 +55,13 @@ experiment heeft laten zien.
 | G19 | Twee verschillende definities van dezelfde naam (ODR-schending) | De linker kiest er één, zonder melding | ASan `detect_odr_violation`; `-flto -Wodr` | | open |
 | G20 | Cyclus van `std::shared_ptr` (geheugenlek) | Een lek geeft geen fout | LeakSanitizer (deel van ASan) | | open |
 | G21 | Exceptie uit een destructor | Een destructor is standaard `noexcept`: het programma stopt | Test die crasht | | open |
+
+## Fase 5 — Code van anderen en het gereedschap
+
+| ID | Constructie | Waarom een test het mist | Verwacht vangnet | Gemeten | Status |
+| --- | --- | --- | --- | --- | --- |
+| G22 | Rauwe `new` en `delete`, of een rauwe pointer die eigenaar is | Een lek of dubbele `delete` treedt alleen op bij een foutpad | clang-tidy `cppcoreguidelines-owning-memory`; LeakSanitizer | | open |
+| G23 | `std::string_view` of `std::span` als lid van een klasse | Het object leeft langer dan de tekst waar het lid naar wijst | Clang `lifetimebound`; ASan | | open |
+| G24 | Waarschuwingen in headers van anderen, verborgen door `-isystem` | De compiler meldt niets. Er is geen test die faalt. | Audit-preset zonder `-isystem` | Zie [e003](../experimenten/e003-code-van-anderen/README.md): de gewone bouw geeft 0 waarschuwingen, ook met `-Werror`. `clang-audit` vindt de niet-geïnitialiseerde variabele en de versmalling. cppcheck negeert `-isystem`. | onderzocht |
+| G25 | Een bibliotheek die zonder sanitizer is gebouwd | ASan ziet geen fout in code die het niet heeft geïnstrumenteerd | Bibliotheek uit de bron bouwen in de sanitizer-preset | Zie [e003](../experimenten/e003-code-van-anderen/README.md): ASan ziet het lezen buiten de array niet in de al gebouwde bibliotheek, wel in de bibliotheek uit de bron. Een `inline`-functie uit de header ziet ASan altijd. | onderzocht |
+| G26 | Pointer-rekenen en indexeren via een rauwe pointer in code van anderen | Het geheugen ernaast is vaak leesbaar | Clang `-Wunsafe-buffer-usage` | Zie [e003](../experimenten/e003-code-van-anderen/README.md): meldt elke index via een rauwe pointer, ook de foute. Wijst plekken aan, bewijst geen fout. Geen meldingen in onze veilige code. | onderzocht |

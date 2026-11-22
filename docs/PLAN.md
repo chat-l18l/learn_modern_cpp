@@ -94,6 +94,31 @@ Acceptatie:
 
 - G17–G21 hebben de status "onderzocht".
 
+## Fase 5 — Code van anderen
+
+**Status:** bezig. Besluit B14. Taak 1 en 2 zijn klaar op 2026-11-22 (experiment e003).
+
+Doel:
+
+- Fouten in code van anderen vinden voordat de code in een project komt, zoveel mogelijk
+  tijdens het compileren.
+
+Taken:
+
+1. Preset `clang-audit`: code van anderen zonder `-isystem`, met `-Wunsafe-buffer-usage`, en
+   clang-tidy over de headers van anderen.
+2. Een experiment voor elke regel G24–G26.
+3. Een experiment met een kleine C-bibliotheek met fouten erin, achter een RAII-wrapper, met
+   unit tests, vangnet-tests en een fuzz-test.
+4. Een protocol voor code van anderen in `AGENTS.md`, op basis van de metingen.
+
+Acceptatie:
+
+- G24–G26 hebben de status "onderzocht".
+- De audit-preset meldt de geplante fouten in de bibliotheek van taak 3 tijdens het compileren,
+  voor zover een hulpmiddel ze kan zien. Het verslag noemt de fouten die geen hulpmiddel ziet.
+- Het protocol in `AGENTS.md` verwijst voor elke regel naar een meting.
+
 ## Later
 
 | Onderwerp | Waarom later |

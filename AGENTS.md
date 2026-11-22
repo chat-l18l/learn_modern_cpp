@@ -44,10 +44,12 @@ Alles draait via pixi, vanaf de root van de repo. Gebruik geen systeemcompiler.
 | clang-tidy | `pixi run tidy` |
 | cppcheck over de veilige code (moet schoon zijn) | `pixi run cppcheck` |
 | cppcheck over de demo's (meting) | `pixi run cppcheck-unsafe` |
+| Audit van code van anderen | `pixi run audit` |
 | Opmaak toepassen / controleren | `pixi run format` / `pixi run format-check` |
 | Nieuw experiment | `pixi run new-experiment eNNN korte-naam` |
 
-Presets: `gcc-debug`, `gcc-release`, `gcc-asan`, `clang-debug`, `clang-asan`, `clang-tsan`.
+Presets: `gcc-debug`, `gcc-release`, `gcc-asan`, `clang-debug`, `clang-asan`, `clang-tsan`,
+`clang-audit`.
 
 ## Verificatie
 
@@ -73,11 +75,16 @@ experimenten/eNNN-korte-naam/
 
 - Voeg elk nieuw experiment toe aan `experimenten/CMakeLists.txt`.
 - Elk doel roept `leren_target(<doel>)` aan. Testbinaries gebruiken `leren_gtest(...)`.
+- Een demo met ongedefinieerd gedrag roept `leren_target(<doel> UNSAFE)` aan. Alle andere doelen
+  bouwen met `-Werror` (besluit B12). Gebruik `UNSAFE` nooit om een waarschuwing in veilige
+  code weg te krijgen.
 - Een vangnet-test bewijst dat een sanitizer de demo vangt. Gebruik
   `PASS_REGULAR_EXPRESSION` met de exacte melding van de sanitizer, niet `WILL_FAIL`.
   `WILL_FAIL` slaagt ook bij een crash om een andere reden.
 - Registreer geen test die afhangt van de uitkomst van ongedefinieerd gedrag zonder sanitizer.
   Die uitkomst verandert met compiler, vlaggen en geheugenindeling.
+- Een blinde-vlek-test (`FAIL_REGULAR_EXPRESSION` op de melding van het vangnet) mag alleen
+  als het verslag de blinde vlek heeft gemeten. Zie e003.
 - Heeft een demo ook een correcte variant, registreer die dan als controletest onder elke
   preset. Die test bewijst dat het vangnet geen vals alarm geeft.
 - Een vals alarm in de veilige code onderdruk je zo klein mogelijk (`#pragma clang diagnostic`
@@ -90,8 +97,23 @@ experimenten/eNNN-korte-naam/
 - Bovenaan staat: `THIS PROGRAM HAS UNDEFINED BEHAVIOUR ON PURPOSE. Do not fix it.`
 - Repareer onveilige code nooit, ook niet als clang-tidy erom vraagt. Zet een opmerking bij
   de onveilige regel die zegt wat er misgaat.
-- Er staat geen `-Werror` aan: waarschuwingen zijn meetgegevens. De veilige code moet wel
-  zonder waarschuwingen bouwen.
+- De demo's bouwen zonder `-Werror`: hun waarschuwingen zijn meetgegevens. De veilige code
+  bouwt met `-Werror`.
+
+## Code van anderen
+
+Code van anderen staat in `vreemd/`. Daar gelden de regels uit B14 en de metingen uit e003.
+
+- Draai `pixi run audit` voordat code van anderen in gebruik komt, en na elke update. Lees elke
+  melding. De gewone bouw meldt niets over code van anderen: CMake voegt de headers in als
+  `-isystem` (e003).
+- Bouw code van anderen uit de bron mee in de presets met een sanitizer. ASan ziet geen fouten
+  in een bibliotheek die al gebouwd is (e003). Kan dat niet, noem de bibliotheek in het
+  verslag als blinde vlek.
+- Roep code van anderen alleen aan via één wrapper. De wrapper gebruikt `std::span`,
+  `std::in_range` en `std::optional` of `std::expected`, en controleert elke voorwaarde die de
+  code van anderen aan de aanroeper overlaat.
+- Repareer de fouten in `vreemd/` niet: het zijn studieobjecten.
 
 ## Codeerafspraken
 
@@ -139,3 +161,7 @@ experimenten/eNNN-korte-naam/
   ASan stopt met exitcode 1 en heeft dat niet nodig. Voorbeeld: `experimenten/e002-*/CMakeLists.txt`.
 - Een demo met `-D_GLIBCXX_DEBUG` mag niet linken met code die zonder die vlag is gebouwd. De
   opbouw van `std::vector` verschilt dan.
+- Ninja bouwt alleen wat veranderd is. Een tweede bouw toont dus de waarschuwingen niet meer.
+  `pixi run audit` bouwt daarom altijd opnieuw (`--clean-first`).
+- cppcheck houdt geen rekening met `-isystem`. De taak `cppcheck` slaat `vreemd/` daarom over
+  met `--suppress`. Een padpatroon voor `--suppress` begint zonder `/`: `'*:*vreemd/*'`.

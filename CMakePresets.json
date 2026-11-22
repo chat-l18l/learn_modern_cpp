@@ -26,7 +26,9 @@
     { "name": "clang-asan",   "inherits": "clang", "displayName": "Clang, ASan + UBSan",
       "cacheVariables": { "LEREN_SANITIZE": "address" } },
     { "name": "clang-tsan",   "inherits": "clang", "displayName": "Clang, ThreadSanitizer",
-      "cacheVariables": { "LEREN_SANITIZE": "thread" } }
+      "cacheVariables": { "LEREN_SANITIZE": "thread" } },
+    { "name": "clang-audit",  "inherits": "clang", "displayName": "Clang, audit of code of others",
+      "cacheVariables": { "LEREN_AUDIT": "ON" } }
   ],
   "buildPresets": [
     { "name": "gcc-debug",   "configurePreset": "gcc-debug" },
@@ -34,7 +36,8 @@
     { "name": "gcc-asan",    "configurePreset": "gcc-asan" },
     { "name": "clang-debug", "configurePreset": "clang-debug" },
     { "name": "clang-asan",  "configurePreset": "clang-asan" },
-    { "name": "clang-tsan",  "configurePreset": "clang-tsan" }
+    { "name": "clang-tsan",  "configurePreset": "clang-tsan" },
+    { "name": "clang-audit", "configurePreset": "clang-audit" }
   ],
   "testPresets": [
     { "name": "base", "hidden": true, "output": { "outputOnFailure": true },
@@ -44,6 +47,7 @@
     { "name": "gcc-asan",    "inherits": "base", "configurePreset": "gcc-asan" },
     { "name": "clang-debug", "inherits": "base", "configurePreset": "clang-debug" },
     { "name": "clang-asan",  "inherits": "base", "configurePreset": "clang-asan" },
-    { "name": "clang-tsan",  "inherits": "base", "configurePreset": "clang-tsan" }
+    { "name": "clang-tsan",  "inherits": "base", "configurePreset": "clang-tsan" },
+    { "name": "clang-audit", "inherits": "base", "configurePreset": "clang-audit" }
   ]
 }

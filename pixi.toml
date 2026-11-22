@@ -22,11 +22,18 @@ check = { depends-on = [
 
 # Static analysis. clang-tidy reads build/clang-debug/compile_commands.json.
 tidy = { cmd = "run-clang-tidy -quiet -p build/clang-debug experimenten", depends-on = [{ task = "configure", args = ["clang-debug"] }] }
-# cppcheck over the safe code. Must report nothing. The demos are skipped:
-# their findings are measurements, see cppcheck-unsafe.
-cppcheck = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --library=googletest --inline-suppr --quiet --error-exitcode=1 --project=build/gcc-debug/compile_commands.json -ibuild --suppress='*:*/demo_unsafe.cpp'", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
+# cppcheck over the safe code. Must report nothing. The demos and vreemd/
+# are skipped: their findings are measurements, see cppcheck-unsafe and audit.
+# cppcheck does not honour -isystem, so vreemd/ needs its own suppression.
+cppcheck = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --library=googletest --inline-suppr --quiet --error-exitcode=1 --project=build/gcc-debug/compile_commands.json -ibuild --suppress='*:*/demo_unsafe.cpp' --suppress='*:*vreemd/*'", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
 # cppcheck over the demos only. Reports what it finds and never fails.
 cppcheck-unsafe = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --quiet --project=build/gcc-debug/compile_commands.json --file-filter='*demo_unsafe.cpp'", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
+
+# Audit of code of others (decision B14). A full rebuild, so that every
+# compiler warning shows again, then clang-tidy and cppcheck over vreemd/.
+# Reports only: the audit never fails on a finding.
+audit-build = { cmd = "cmake --build --preset clang-audit --clean-first", depends-on = [{ task = "configure", args = ["clang-audit"] }] }
+audit = { cmd = "run-clang-tidy -quiet -p build/clang-audit -header-filter='.*/vreemd/.*' vreemd ; cppcheck --enable=warning,style,performance,portability --std=c++23 --quiet vreemd ; true", depends-on = ["audit-build"] }
 # The template holds @ID@ placeholders, so it is not C++ yet: skip it.
 format = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format -i"
 format-check = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format --dry-run --Werror"

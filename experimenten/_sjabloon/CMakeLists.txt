@@ -9,7 +9,7 @@ target_link_libraries(@ID@_test PRIVATE @ID@_lib)
 
 # The demo has undefined behaviour on purpose.
 add_executable(@ID@_demo_unsafe demo_unsafe.cpp)
-leren_target(@ID@_demo_unsafe)
+leren_target(@ID@_demo_unsafe UNSAFE)
 target_link_libraries(@ID@_demo_unsafe PRIVATE @ID@_lib)
 
 # Safety-net test: passes only when the sanitizer prints the expected report.

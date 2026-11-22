@@ -14,11 +14,14 @@ verwijst naar het oude.
 | B04 | C++23 zonder compiler-extensies | Besluit | 2026-11-22 |
 | B05 | Twee compilers: GCC en Clang | Besluit | 2026-11-22 |
 | B06 | Sanitizers als vaste presets, met vangnet-tests | Besluit | 2026-11-22 |
-| B07 | Geen `-Werror`; waarschuwingen zijn meetgegevens | Besluit | 2026-11-22 |
+| B07 | Geen `-Werror`; waarschuwingen zijn meetgegevens | Herzien door B12 | 2026-11-22 |
 | B08 | Taal: documenten Nederlands, code Engels | Besluit | 2026-11-22 |
 | B09 | Geen C++-modules | Besluit | 2026-11-22 |
 | B10 | Opmaak van de code | Voorstel | 2026-11-22 |
 | B11 | Stijl van commitberichten | Voorstel | 2026-11-22 |
+| B12 | `-Werror` voor de veilige code (herziet B07) | Besluit | 2026-11-22 |
+| B13 | Extra waarschuwingen: `-Wcast-align`, `-Wdouble-promotion` | Besluit | 2026-11-22 |
+| B14 | Fase 5: code van anderen eerst controleren, dan pas gebruiken | Besluit | 2026-11-22 |
 
 ---
 
@@ -88,6 +91,9 @@ build niet.
 wat we meten. De veilige code moet wel zonder waarschuwingen bouwen. Dat controleren we bij elke
 stap met het oog.
 
+**Herzien op 2026-11-22 door B12:** de veilige code bouwt nu met `-Werror`. Voor de demo's
+blijft B07 gelden.
+
 ### B08 — Taal: documenten Nederlands, code Engels
 
 **Besluit:** README, verslagen en documenten in `docs/` in het Nederlands, volgens de principes
@@ -125,3 +131,73 @@ Energy Owl. Met het experiment- of catalogus-ID als dat past. Voorbeeld:
 **Alternatief:** Conventional Commits zoals in Omnibot: `feat(e002): ...`, `docs: ...`.
 
 **Te beslissen:** het voorstel overnemen, of Conventional Commits gebruiken.
+
+### B12 — `-Werror` voor de veilige code (herziet B07)
+
+**Besluit (2026-11-22):** `leren_target()` krijgt de optie `UNSAFE`. Een doel zonder `UNSAFE` bouwt met
+`-Werror`. Alleen de demo's krijgen `UNSAFE` en bouwen zonder `-Werror`.
+
+**Waarom:** B07 zegt dat de veilige code zonder waarschuwingen moet bouwen, maar niets dwingt dat
+af. Een nieuwe waarschuwing in de veilige code valt nu alleen op als iemand de uitvoer leest. Met
+`-Werror` stopt de build.
+
+**Gevolg:** een vals alarm in de veilige code (zoals in e002) moet je onderdrukken, met de reden
+erbij. Dat is al de werkwijze. De preset `clang-audit` gebruikt nooit `-Werror`: een audit is
+een rapport en moet alle meldingen tonen.
+
+**Uitgevoerd:** `leren_target(<doel> [UNSAFE])` in `cmake/leren.cmake`. Bewezen met een
+geplante ongebruikte variabele in `grow.cpp`: de bouw stopt met `-Werror=unused-variable`.
+
+### B13 — Extra waarschuwingen: `-Wcast-align`, `-Wdouble-promotion`
+
+**Besluit (2026-11-22):** voeg `-Wcast-align` en `-Wdouble-promotion` toe aan `cmake/leren.cmake`.
+
+**Waarom:** beide staan in een richtlijn voor agents die we hebben bekeken, en ontbreken bij ons.
+`-Wcast-align` meldt een cast naar een type met een strengere uitlijning. `-Wdouble-promotion`
+meldt een `float` die stil een `double` wordt.
+
+**Niet overnemen uit die richtlijn:**
+
+| Vlag | Waarom niet |
+| --- | --- |
+| `-Wlifetime` | Bestaat niet. GCC 15 stopt met `unrecognized command-line option`. Clang 23 geeft `unknown warning option`. Gemeten op 2026-11-22. De Clang-vlag die wel bestaat, is `-Wlifetime-safety`; die staat al aan. |
+| `-Wunused` | Zit al in `-Wall` |
+| `-fsanitize=...` zonder `-fno-sanitize-recover=all` | Dan meldt UBSan de fout, maar het programma eindigt met exitcode 0 en de test is groen. Gemeten op 2026-11-22 met een signed overflow. Wij hebben `-fno-sanitize-recover=all` al (B06). |
+
+### B14 — Fase 5: code van anderen eerst controleren, dan pas gebruiken
+
+**Besluit (2026-11-22):** een nieuwe fase in [PLAN.md](PLAN.md) met een audit-preset en experimenten
+over code van anderen. Pas na die fase komt er een protocol voor code van anderen in `AGENTS.md`.
+
+**Waarom:** drie voorlopige metingen op 2026-11-22 laten zien dat de gewone opzet fouten in code
+van anderen niet ziet:
+
+| Meting | Uitkomst |
+| --- | --- |
+| Een header met een niet-geïnitialiseerde variabele en een stille versmalling, ingevoegd met `-I` | GCC: 2 waarschuwingen. Clang: 4 waarschuwingen. |
+| Dezelfde header, ingevoegd met `-isystem` | GCC en Clang: **0 waarschuwingen** |
+| Een functie die buiten een array leest, in een bibliotheek die **zonder** ASan is gebouwd, aangeroepen uit een programma **met** ASan | **Geen melding.** Het programma drukt een willekeurige waarde af. |
+| Dezelfde functie, bibliotheek **met** ASan gebouwd | `heap-buffer-overflow` |
+| Clang `-Wunsafe-buffer-usage` op dezelfde header | Meldt de pointer-index `p[i]` tijdens het compileren |
+
+CMake voegt de headers van een geïmporteerde bibliotheek standaard in als `-isystem`. Elke
+bibliotheek uit pixi, conda of `find_package` is dus stil voor de compiler. Een bibliotheek uit
+pixi of conda is ook al gebouwd, dus zonder ASan.
+
+**Wat de fase moet opleveren:**
+
+1. Een preset `clang-audit`: code van anderen als gewone bron (niet `-isystem`), met onze
+   waarschuwingen plus `-Wunsafe-buffer-usage`, en clang-tidy met een `HeaderFilterRegex` die
+   de code van anderen omvat.
+2. De regel: code van anderen bouwt uit de bron mee in de presets met een sanitizer. Een
+   bibliotheek die alleen als binair bestand bestaat, staat in het verslag als blinde vlek.
+3. Een RAII-wrapper aan de grens: pointer plus lengte wordt `std::span`, eigendom wordt
+   `std::unique_ptr` met een eigen deleter, een foutcode wordt `std::expected`. De unit tests en
+   de vangnet-tests richten zich op de wrapper.
+4. Een fuzz-test (libFuzzer, `-fsanitize=fuzzer`) voor elke functie van anderen die invoer van
+   buiten leest.
+
+**Uitgevoerd op 2026-11-22:** punt 1 (preset `clang-audit`, taak `pixi run audit`) en punt 2
+(de doelen `minilib` en `minilib_prebuilt`). Punt 3 in eerste vorm in e003. De metingen staan in
+[e003](../experimenten/e003-code-van-anderen/README.md). Open: punt 4, en het protocol in
+`AGENTS.md`.

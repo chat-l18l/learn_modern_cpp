@@ -18,10 +18,15 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 set(LEREN_SANITIZE "none" CACHE STRING "Sanitizer: none, address or thread")
 set_property(CACHE LEREN_SANITIZE PROPERTY STRINGS none address thread)
 
+# Audit mode (decision B14): treat code of others in vreemd/ as our own code,
+# with all warnings, and add -Wunsafe-buffer-usage (Clang only).
+option(LEREN_AUDIT "Audit code of others: no -isystem, extra warnings" OFF)
+
 include(cmake/leren.cmake)
 
 find_package(GTest 1.14 REQUIRED CONFIG)
 include(GoogleTest)
 enable_testing()
 
+add_subdirectory(vreemd)
 add_subdirectory(experimenten)
