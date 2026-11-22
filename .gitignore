@@ -1,0 +1,11 @@
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# build output, one directory per preset
+build/
+
+# editor and clangd caches
+.cache/
+.vscode/
+compile_commands.json

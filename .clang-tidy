@@ -1,0 +1,25 @@
+# Static analysis for the experiments. Run: pixi run tidy
+# The list is wide on purpose: we want to see what each check finds.
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -misc-include-cleaner,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-avoid-c-arrays,
+  -modernize-avoid-c-arrays,
+  -portability-avoid-pragma-once
+WarningsAsErrors: ''
+HeaderFilterRegex: 'experimenten/.*'
+FormatStyle: file

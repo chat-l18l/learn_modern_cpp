@@ -1,0 +1,49 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LEREN_SANITIZE": "none"
+      }
+    },
+    { "name": "gcc", "hidden": true, "inherits": "base",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "x86_64-conda-linux-gnu-g++" } },
+    { "name": "clang", "hidden": true, "inherits": "base",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "x86_64-conda-linux-gnu-clang++" } },
+
+    { "name": "gcc-debug",    "inherits": "gcc",   "displayName": "GCC, debug, no sanitizer" },
+    { "name": "gcc-release",  "inherits": "gcc",   "displayName": "GCC, -O2, no sanitizer",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" } },
+    { "name": "gcc-asan",     "inherits": "gcc",   "displayName": "GCC, ASan + UBSan",
+      "cacheVariables": { "LEREN_SANITIZE": "address" } },
+    { "name": "clang-debug",  "inherits": "clang", "displayName": "Clang, debug, no sanitizer" },
+    { "name": "clang-asan",   "inherits": "clang", "displayName": "Clang, ASan + UBSan",
+      "cacheVariables": { "LEREN_SANITIZE": "address" } },
+    { "name": "clang-tsan",   "inherits": "clang", "displayName": "Clang, ThreadSanitizer",
+      "cacheVariables": { "LEREN_SANITIZE": "thread" } }
+  ],
+  "buildPresets": [
+    { "name": "gcc-debug",   "configurePreset": "gcc-debug" },
+    { "name": "gcc-release", "configurePreset": "gcc-release" },
+    { "name": "gcc-asan",    "configurePreset": "gcc-asan" },
+    { "name": "clang-debug", "configurePreset": "clang-debug" },
+    { "name": "clang-asan",  "configurePreset": "clang-asan" },
+    { "name": "clang-tsan",  "configurePreset": "clang-tsan" }
+  ],
+  "testPresets": [
+    { "name": "base", "hidden": true, "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" } },
+    { "name": "gcc-debug",   "inherits": "base", "configurePreset": "gcc-debug" },
+    { "name": "gcc-release", "inherits": "base", "configurePreset": "gcc-release" },
+    { "name": "gcc-asan",    "inherits": "base", "configurePreset": "gcc-asan" },
+    { "name": "clang-debug", "inherits": "base", "configurePreset": "clang-debug" },
+    { "name": "clang-asan",  "inherits": "base", "configurePreset": "clang-asan" },
+    { "name": "clang-tsan",  "inherits": "base", "configurePreset": "clang-tsan" }
+  ]
+}

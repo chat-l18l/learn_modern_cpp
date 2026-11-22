@@ -1,0 +1,45 @@
+[workspace]
+authors = ["chatbot_llm_agi <chat@l18l.nl>"]
+channels = ["conda-forge"]
+name = "cpp-leren"
+description = "Werkplaats om modern C++ te leren: onveilige constructies herkennen en meten welk vangnet ze vindt"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+# Usage: pixi run test [preset]   (preset from CMakePresets.json, default gcc-debug)
+configure = { cmd = "cmake --preset {{ preset }}", args = [{ arg = "preset", default = "gcc-debug" }] }
+build = { cmd = "cmake --build --preset {{ preset }}", args = [{ arg = "preset", default = "gcc-debug" }], depends-on = [{ task = "configure", args = ["{{ preset }}"] }] }
+test = { cmd = "ctest --preset {{ preset }}", args = [{ arg = "preset", default = "gcc-debug" }], depends-on = [{ task = "build", args = ["{{ preset }}"] }] }
+
+# The full check: both compilers, with and without sanitizers.
+check = { depends-on = [
+    { task = "test", args = ["gcc-debug"] },
+    { task = "test", args = ["gcc-asan"] },
+    { task = "test", args = ["clang-debug"] },
+    { task = "test", args = ["clang-asan"] },
+] }
+
+# Static analysis. clang-tidy reads build/clang-debug/compile_commands.json.
+tidy = { cmd = "run-clang-tidy -quiet -p build/clang-debug experimenten", depends-on = [{ task = "configure", args = ["clang-debug"] }] }
+cppcheck = { cmd = "cppcheck --enable=warning,style,performance,portability --std=c++23 --library=googletest --inline-suppr --quiet --error-exitcode=1 --project=build/gcc-debug/compile_commands.json -ibuild", depends-on = [{ task = "configure", args = ["gcc-debug"] }] }
+# The template holds @ID@ placeholders, so it is not C++ yet: skip it.
+format = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format -i"
+format-check = "find experimenten -path experimenten/_sjabloon -prune -o \\( -name '*.cpp' -o -name '*.hpp' \\) -print | xargs clang-format --dry-run --Werror"
+
+# New experiment from the template: pixi run new-experiment e002 iterator-invalidation
+new-experiment = { cmd = "tools/nieuw-experiment.sh {{ id }} {{ name }}", args = ["id", "name"] }
+
+clean = "rm -rf build"
+
+[dependencies]
+cmake = ">=4.5.1,<5"
+ninja = ">=1.13.2,<2"
+cxx-compiler = ">=2.0.0,<3"
+clangxx = ">=23.1.6,<24"
+clang-tools = ">=23.1.6,<24"
+compiler-rt = ">=23.1.6,<24"
+gtest = ">=1.18.0,<2"
+cppcheck = ">=2.22.0,<3"
+gdb = ">=18.1,<19"
+llvm-tools = ">=23.1.6,<24"
