@@ -212,6 +212,10 @@ principes en blijft staan als studiemateriaal.
 - Designated initializers in de verkeerde volgorde zijn in GCC een fout, in Clang alleen een
   waarschuwing (`-Wreorder-init-list`). De bescherming van P2 regel 11 hangt in Clang af van
   `-Werror` (e005).
+- `// cppcheck-suppress <id>` werkt alleen op de regel die cppcheck in zijn melding noemt. Bij
+  `useStlAlgorithm` is dat de regel in de lus, niet de `for`-regel (e006).
+- Een experiment dat twee standaarden vergelijkt, bouwt hetzelfde bestand twee keer, met
+  `set_target_properties(<doel> PROPERTIES CXX_STANDARD 20)`. Zie e006.
 - Vervang de globale `operator new` niet in een binary die onder een sanitizer draait. ASan
   vervangt `operator new` zelf, en de twee mengen: `alloc-dealloc-mismatch` (e004).
 - Een stackmeting (`-fstack-usage`) zegt alleen iets bij de optimalisatie van het doel. Onder

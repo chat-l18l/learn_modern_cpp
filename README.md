@@ -198,6 +198,7 @@ De standaardpreset is `gcc-debug`.
 | e003 | Code van anderen: verborgen waarschuwingen en blinde vlekken | G24, G25, G26 | Gewone bouw niets (`-isystem`); `clang-audit` vindt 2 van 4 fouten precies; ASan alleen in code die uit de bron is gebouwd | [verslag](experimenten/e003-code-van-anderen/README.md) |
 | e004 | Lambda met `[&]` of `[=]` die langer leeft dan wat ze vangt; waar captures staan en wat ze aan stack kosten | G03 | ASan, cppcheck, clang-tidy en Clang 23 altijd; GCC alleen `[=]` met `this` | [verslag](experimenten/e004-lambda-capture/README.md) |
 | e005 | Sterke types: handles, grootheden, verouderde index en verwisselde parameters | G28, G29 | Compiler weigert misbruik van sterke types; geen sanitizer ziet G28 of G29; clang-tidy en cppcheck vonden de verwisseling in de demo | [verslag](experimenten/e005-sterke-types/README.md) |
+| e006 | Range-for over een deel van een tijdelijk object, C++20 tegenover C++23 | G04 | ASan scheidt C++20 en C++23 precies; Clang meldt alles in C++20; GCC mist `optional::value()`; cppcheck en clang-tidy niets | [verslag](experimenten/e006-range-for-tijdelijk/README.md) |
 
 ## Tests
 

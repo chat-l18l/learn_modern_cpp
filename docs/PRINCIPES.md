@@ -31,8 +31,8 @@ in [AUDITVRAGEN.md](AUDITVRAGEN.md).
 
 | ID | Status | Bewijs |
 | --- | --- | --- |
-| P1 | vastgesteld | e004 |
-| P2 | vastgesteld | e001, e002, e004, e005 |
+| P1 | vastgesteld | e004, e006 |
+| P2 | vastgesteld | e001, e002, e004, e005, e006 |
 | P3 | werkhypothese | G27: voorlopige meting, nog geen experiment |
 | P4 | werkhypothese | – |
 | P5 | vastgesteld | e004, B16 |
@@ -87,6 +87,7 @@ test hoeft geen toestand op te bouwen.
 
 | Bron | Wat het laat zien |
 | --- | --- |
+| [e006](../experimenten/e006-range-for-tijdelijk/README.md) | Een range-for over een publiek lid van een tijdelijke struct is in C++20 en C++23 correct. Dezelfde lus via een functie die een referentie teruggeeft, is in C++20 ongedefinieerd gedrag. Eenvoudige data met publieke leden is hier veiliger dan een functie die toegang geeft. |
 | [e004](../experimenten/e004-lambda-capture/README.md) | Een callback met `[&count]` verbergt data (een pointer), eigenaar en levensduur in de control flow. Uitgeschreven als struct `Counter`, functie `counter_tick` en tabel `Counter_table` zijn alle drie zichtbaar, en kan niets meer hangen. |
 
 ### Achtergrond
@@ -181,6 +182,11 @@ De kolom "kale `std::size_t`" volgt uit de taalregels en is niet apart gemeten.
     in GCC, en in Clang alleen met `-Werror` (B12). Een veld zonder default constructor kan de
     aanroeper niet overslaan.
 
+12. Een range-for over een deel van een tijdelijk object (`for (x : f(make()))`) is pas sinds
+    C++23 correct. Geef de eigenaar eerst een naam, ook in C++23: de code kan in een project met
+    een ouder niveau terechtkomen, en de "nette" herschrijving met een referentie met een naam is
+    in elke standaard fout. Zie e006.
+
 Regel 5 is nodig omdat P1 de data losmaakt van het gedrag. Object-oriëntatie beschermt
 invarianten door data in een klasse te verbergen. Zonder die klasse moet de bescherming uit de
 types en uit de transformaties komen.
@@ -212,6 +218,7 @@ vrijgegeven geheugen bevat vaak nog de oude waarde, en de test is groen.
 | [e001](../experimenten/e001-dangling-string-view/README.md) | Een `std::string_view` naar een tijdelijke `std::string`. Alleen ASan vindt het altijd. Zonder sanitizer geeft een korte string het juiste antwoord. |
 | [e002](../experimenten/e002-vector-push-back/README.md) | Een referentie in een vector na `push_back`. Of de code fout is, hangt af van de capaciteit: een getal dat niet in de code staat. |
 | [e004](../experimenten/e004-lambda-capture/README.md) | Een lambda die ontsnapt. In `gcc-debug` geeft de fout het juiste antwoord. |
+| [e006](../experimenten/e006-range-for-tijdelijk/README.md) | `for (x : readings_of(make()))` is in C++20 ongedefinieerd gedrag en in C++23 correct. `const auto &r = readings_of(make())` is in beide fout. Zonder sanitizer is het antwoord altijd goed. |
 | [e005](../experimenten/e005-sterke-types/README.md) | Een sterk handle-type weigert een handle van een andere tabel, een `int` en `{3}`, vastgelegd met `static_assert`. Een verouderde gewone index leest een verkeerd element zonder dat een sanitizer het ziet. Een generatie van 16 bits loopt na 65536 keer hergebruik rond. |
 
 ---

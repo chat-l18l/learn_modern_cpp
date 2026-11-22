@@ -5,6 +5,39 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 11: experiment e006, range-for over een tijdelijk object (G04)
+
+**Gedaan:**
+
+1. Experiment e006 met vier varianten, gebouwd als C++20 en als C++23.
+2. Controletests voor de correcte combinaties en vangnet-tests voor de foute, per standaard.
+3. P2 regel 12: geef de eigenaar een naam, ook in C++23.
+
+**Gemeten:**
+
+- `pixi run check` slaagt: 66 tests zonder sanitizer, 75 met ASan, per compiler.
+- `for (x : readings_of(make()))` en `for (x : make_optional().value().readings)`: in C++20
+  `stack-use-after-scope`, in C++23 correct.
+- `const auto &r = readings_of(make())`: in beide standaarden `stack-use-after-scope`.
+- `for (x : make().readings)`: in beide standaarden correct.
+- Zonder sanitizer geven alle varianten het juiste antwoord.
+- Clang meldt in C++20 alle drie de fouten. GCC mist `optional-value`. cppcheck en clang-tidy
+  melden niets over levensduur.
+
+**Gevonden tijdens het werk:**
+
+- `cppcheck-suppress` moet op de regel staan die cppcheck noemt, niet op de `for`-regel.
+- clang-tidy `bugprone-unchecked-optional-access` geeft vals alarm na `ASSERT_TRUE` van
+  GoogleTest.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+
+**Volgende stap:** G05, gebruik van een object na `std::move`.
+
+---
+
 ## 2026-11-22 — Stap 10: experiment e005, sterke types (G28, G29)
 
 **Gedaan:**
