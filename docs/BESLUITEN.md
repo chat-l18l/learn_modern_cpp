@@ -26,6 +26,8 @@ verwijst naar het oude.
 | B16 | Stackbudget per functie met `-Wframe-larger-than` | Besluit | 2026-11-22 |
 | B17 | De aanroeper alloceert; rekenwerk in pure functies | Besluit | 2026-11-22 |
 | B18 | Ontwerpprincipes en auditvragen als eigen documenten | Besluit | 2026-11-22 |
+| B19 | Data-oriented design afgewogen: helderheid eerst, performance na een meting | Besluit | 2026-11-22 |
+| B20 | Handles en fysieke grootheden zijn sterke types | Besluit | 2026-11-22 |
 
 ---
 
@@ -296,3 +298,72 @@ document heeft elk principe een regel, een reden, een toets en bewijs.
    werkhypothese.
 2. Na elk experiment volgt de vraag: bevestigt, verandert of weerlegt het een principe?
 3. Fase 6 van het [plan](PLAN.md) toetst de principes aan code uit de praktijk.
+
+### B19 — Data-oriented design afgewogen: helderheid eerst, performance na een meting
+
+**Besluit (2026-11-22):** de ideeën van data-oriented design (DOD) die de data flow zichtbaar
+maken, staan in P1–P4. De hardware-optimalisaties uit DOD vallen onder het nieuwe principe P7:
+alleen na een eis die faalt, in overleg, met de heldere versie als referentie.
+
+De afweging is in een gesprek gemaakt, onderwerp voor onderwerp. Uitkomst per onderwerp:
+
+| Onderwerp uit DOD | Uitkomst | Waar |
+| --- | --- | --- |
+| Data staat voorop; programma's transformeren invoer in uitvoer | Overgenomen | P1 |
+| Ontwerp voor de hardware en de cache | Alleen na een meting (K1) | P7 |
+| Ontwerp voor de reeks, niet voor één element | Aangepast: de kern is een pure functie per element; een batchfunctie is een dunne lus eromheen (K4) | P1 regel 5 |
+| Hot/cold-splitsing | Alleen na een meting | P7 |
+| Geen voorbarige abstractie en indirectie | Overgenomen | P4 |
+| Meten, geen dogma | Overgenomen, aangescherpt: alleen een eis die faalt geeft toestemming; een profiel wijst alleen aan (K1a) | P7 regel 2 |
+| Struct of Arrays | Alleen na een meting | P7 |
+| Transformaties A→B, in place, generatief | Overgenomen, met regels: geen overlap bij A→B, `_in_place` in de naam, `constexpr` bovengrens bij generatief, `out` ongedefinieerd bij een fout (K3) | P1 regel 6 |
+| Indexen en handles in plaats van pointers | Overgenomen: vaste tabellen, getypeerde index per tabel, `_at` met assert en `_find` met `std::expected`; een handle met generatie zodra er uit een tabel wordt verwijderd (K2) | P2 regels 6–8 |
+| Entity Component System | Ideeën overgenomen (ID's, tabellen, functies over tabellen); framework afgewezen, omdat het de control flow verbergt (K7) | P4 |
+| Partitioneren | Op soort: overgenomen, één tabel per soort. Op toestand: alleen na een meting; de toestand blijft een `enum class`-veld (K5) | P3 regel 4, P4, P7 |
+| Sparse data in side tables | Aangepast: optionele gegevens in de struct als `std::optional`; een side table alleen bij een gemeten geheugeneis (K6) | P2 regel 9, P7 |
+
+Aanvullend (K1b): geen versie voor performance zonder de heldere versie als referentie. Een test
+vergelijkt beide versies op dezelfde invoer.
+
+**Waarom:** het doel van het project is begrijpelijke, auditeerbare software. De doelplatforms
+(ESP32-P4, ESP32-S3, Linux x86-64) hebben caches, maar het effect verschilt per platform en per
+soort geheugen. Een optimalisatie zonder eis kost helderheid en lost geen gemeten probleem op.
+
+**Gevolg:**
+
+1. Een agent let op performance en meldt wat opvalt. De agent verandert niets voor
+   performance zonder overleg.
+2. Nieuwe auditvragen: A17 (tabellen en indexen), A18 (optionele gegevens), A19 (performance),
+   A20 (transformaties).
+3. Nieuwe catalogusregel G28: een verouderde index die het verkeerde element leest.
+4. P7 heeft nog geen bewijs. Een experiment met een heldere versie, een snelle versie en een
+   vergelijkende test maakt P7 vastgesteld.
+
+### B20 — Handles en fysieke grootheden zijn sterke types
+
+**Besluit (2026-11-22):** P2 regel 6 en regel 10 in [PRINCIPES.md](PRINCIPES.md).
+
+| Vraag | Keuze |
+| --- | --- |
+| Wie mag een handle maken? | Iedereen, maar alleen expliciet: een `explicit` constructor. Een handle uit een getal maken mag alleen de tabel, `<x>_find` en een test. De review controleert dat. De compiler dwingt het niet af: dat zou een private constructor en een `friend` vragen. |
+| Eén template of één struct per tabel? | Eén uitgeschreven struct per tabel. Geen template. |
+| Ook fysieke grootheden? | Ja: een sterk type met de eenheid in de naam aan elke interface tussen modules. Tijd via `std::chrono`. Binnen een pure rekenfunctie mag een kaal getal. |
+
+**Waarom:** een sterk type laat de compiler fouten weigeren die anders pas tijdens het uitvoeren
+blijken, of nooit: een index in de verkeerde tabel, een temperatuur waar een spanning hoort,
+verwisselde parameters. Dat sluit aan bij het doel om fouten te herkennen zonder runtime.
+
+**Gemeten op 2026-11-22** (GCC 15.3 en Clang 23.1, `static_assert` met een `concept`): het
+sterke type weigert een handle van een andere tabel, een `int`, rekenen, ordenen en
+`sensor_at(table, {3})`. Een struct zonder constructor laat `sensor_at(table, {3})` door. De
+volledige tabel staat bij P2 regel 6.
+
+**Gevolg:**
+
+1. De code in e003 (`e003::get` met `std::size_t`) en e004 (`counter_table_add` geeft
+   `std::optional<std::size_t>`) volgt de regel niet. Die code dateert van vóór B20 en blijft
+   staan als studiemateriaal.
+2. Nieuwe auditvragen A21 (handles) en A22 (grootheden), en catalogusregel G29 (verwisselde
+   parameters).
+3. Een experiment kan de meting vastleggen als tests die tijdens het compileren draaien, en
+   ook de grootheden meten. Dat is nog niet gedaan.

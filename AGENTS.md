@@ -142,11 +142,17 @@ Alle nieuwe code volgt de principes in `docs/PRINCIPES.md`. Toets elke wijziging
 | ID | Principe | In het kort |
 | --- | --- | --- |
 | P1 | Data en control flow zijn gescheiden | Data in structs, transformaties als (bij voorkeur pure) vrije functies, de control flow van een taak op één plek |
-| P2 | Elke data heeft één eigenaar | Lezen via `const T &` of `std::span<const T>`; lenen korter dan de eigenaar leeft; invarianten via types of via de transformatie |
+| P2 | Elke data heeft één eigenaar | Lezen via `const T &` of `std::span<const T>`; lenen korter dan de eigenaar leeft; invarianten via types of via de transformatie; vaste tabellen; handles en fysieke grootheden als sterke types (`explicit` constructor, alleen `==`); `<x>_at` en `<x>_find` |
 | P3 | Control flow is expliciet | `enum class` en `switch` zonder `default`; tabellen boven `if`-ketens; geen overloads of impliciete conversies |
 | P4 | Minimale abstractie | Concrete code; templates alleen met `concept`; `virtual` alleen voor een open verzameling types; geen ontsnappende lambda met `[&]` |
 | P5 | Geheugengebruik is vast en zichtbaar | De aanroeper alloceert en geeft een `std::span` mee; stackbudget 512 bytes per functie; `static_assert` op `sizeof`; geen `std::function` |
 | P6 | Code van anderen staat achter één grens | `pixi run audit`; uit de bron bouwen met sanitizer; één wrapper |
+| P7 | Helderheid gaat voor performance | Optimalisatie alleen na een eis die faalt, in overleg, met de heldere versie als referentie in de tests |
+
+Let op performance, en meld wat je ziet: een onnodige kopie, een allocatie, een lus die vaak
+draait. Verander niets voor performance zonder overleg met de gebruiker (P7, besluit B19).
+Technieken als Struct of Arrays, hot/cold-splitsing en partitioneren op toestand zijn geen
+standaard.
 
 Bij een conflict tussen een principe en de omringende code: volg het principe in nieuwe code,
 en herschrijf bestaande code niet ongevraagd. De code in e001–e004 dateert deels van vóór de
@@ -192,6 +198,9 @@ principes en blijft staan als studiemateriaal.
   Een bouw die niets opnieuw compileert, toont geen enkele melding en lijkt dan schoon.
 - Plant je een fout om een vangnet te bewijzen, zet de wijziging dan terug met de hand of met
   `git checkout -- <bestand>`. Het tweede werkt alleen als het bestand al in Git staat.
+- Een `requires`-expressie buiten een template is geen test die `false` oplevert. Code die niet
+  compileert, geeft dan een harde fout. Zet de controle in een `concept` met een
+  template-parameter, en test dat concept met `static_assert` (B20).
 - Vervang de globale `operator new` niet in een binary die onder een sanitizer draait. ASan
   vervangt `operator new` zelf, en de twee mengen: `alloc-dealloc-mismatch` (e004).
 - Een stackmeting (`-fstack-usage`) zegt alleen iets bij de optimalisatie van het doel. Onder

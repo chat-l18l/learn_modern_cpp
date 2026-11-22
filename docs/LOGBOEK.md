@@ -5,6 +5,59 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 9: handles en grootheden als sterke types (B20)
+
+**Gedaan:**
+
+1. P2 regel 6 aangescherpt: een handle is een uitgeschreven struct per tabel, met een
+   `explicit` constructor en alleen `==`.
+2. P2 regel 10 toegevoegd: een fysieke grootheid aan een interface tussen modules is een sterk
+   type met de eenheid in de naam. Tijd via `std::chrono`.
+3. Besluit B20, auditvragen A21 en A22, catalogusregel G29 en een valkuil in AGENTS.md.
+
+**Gemeten:**
+
+- Met `static_assert` tijdens het compileren, GCC 15.3 en Clang 23.1: het sterke type weigert
+  een handle van een andere tabel, een `int`, rekenen, ordenen en `sensor_at(table, {3})`.
+- Een struct zonder constructor laat `sensor_at(table, {3})` door, en heeft geen `==`.
+
+**Gevonden tijdens het werk:**
+
+- De eerste meting gebruikte `requires`-expressies buiten een template. Die gaven harde fouten
+  in plaats van `false`. Herschreven met een `concept` per eigenschap.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+- De meting van B20 staat nog niet als experiment in de repo.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
+## 2026-11-22 — Stap 8: data-oriented design afgewogen (B19)
+
+**Gedaan:**
+
+1. De onderwerpen van data-oriented design één voor één afgewogen in een gesprek. Uitkomst:
+   consensus K1–K7, vastgelegd in besluit B19.
+2. P1–P4 aangevuld: transformaties in drie soorten, pure functie per element, vaste tabellen met
+   een getypeerde index, `std::optional` in de struct, toestand als `enum class`-veld, één tabel
+   per soort, geen framework dat de control flow overneemt.
+3. Nieuw principe P7: helderheid gaat voor performance.
+4. Auditvragen A17–A20 en catalogusregel G28 (verouderde index) toegevoegd.
+
+**Status van de principes:** P1, P2, P5 en P6 vastgesteld. P3, P4 en P7 werkhypothese.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+- P7 vraagt een experiment met een heldere versie, een snelle versie en een vergelijkende test.
+
+**Volgende stap:** G04, range-for over een tijdelijk object in C++20 en C++23.
+
+---
+
 ## 2026-11-22 — Stap 7: twee doelen, principes en auditvragen (B18)
 
 **Gedaan:**

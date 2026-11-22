@@ -22,7 +22,7 @@ uitkomsten. Een verwachting is geen uitkomst.
 
 1. Leg de principes vast in [docs/PRINCIPES.md](docs/PRINCIPES.md): data en control flow
    gescheiden, één eigenaar per stuk data, expliciete control flow, minimale abstractie, vast
-   geheugengebruik, en code van anderen achter één grens.
+   geheugengebruik, code van anderen achter één grens, en helderheid vóór performance.
 2. Geef elk principe een toets: een hulpmiddel, of een vraag uit
    [docs/AUDITVRAGEN.md](docs/AUDITVRAGEN.md).
 3. Onderbouw elk principe met bewijs uit een experiment.
@@ -182,6 +182,10 @@ De standaardpreset is `gcc-debug`.
 | Control flow | De beslissingen: wat er wanneer gebeurt, en waarom |
 | Transformatie | Een functie die data in een nieuwe vorm brengt, bij voorkeur een pure functie |
 | Invariant | Een voorwaarde die voor data altijd moet gelden, bijvoorbeeld `used <= capacity` |
+| Sterk type | Een eigen type voor een waarde die anders een kaal getal is, met alleen de bewerkingen die betekenis hebben. De compiler weigert een waarde van een ander soort. |
+| Handle | Een sterk type dat een element in één tabel aanwijst, zoals `Sensor_id`. Zie P2 regel 6. |
+| Referentieversie | De heldere versie van een functie die blijft bestaan naast een snelle versie. Een test vergelijkt beide. |
+| Data-oriented design (DOD) | Een ontwerpstijl die begint bij de vorm van de data en de transformaties erop, niet bij klassen. Zie besluit B19. |
 | Principe | Een ontwerpregel met een reden, een toets en bewijs. Zie [docs/PRINCIPES.md](docs/PRINCIPES.md). |
 | Vangnet-test | Een test die slaagt als een sanitizer de onveilige demo vangt |
 
