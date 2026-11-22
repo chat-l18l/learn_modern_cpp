@@ -22,6 +22,7 @@ verwijst naar het oude.
 | B12 | `-Werror` voor de veilige code (herziet B07) | Besluit | 2026-11-22 |
 | B13 | Extra waarschuwingen: `-Wcast-align`, `-Wdouble-promotion` | Besluit | 2026-11-22 |
 | B14 | Fase 5: code van anderen eerst controleren, dan pas gebruiken | Besluit | 2026-11-22 |
+| B15 | Eenvoud boven slimheid: regels voor templates, overloads, opbouw en commentaar | Besluit | 2026-11-22 |
 
 ---
 
@@ -201,3 +202,24 @@ pixi of conda is ook al gebouwd, dus zonder ASan.
 (de doelen `minilib` en `minilib_prebuilt`). Punt 3 in eerste vorm in e003. De metingen staan in
 [e003](../experimenten/e003-code-van-anderen/README.md). Open: punt 4, en het protocol in
 `AGENTS.md`.
+
+### B15 — Eenvoud boven slimheid
+
+**Besluit (2026-11-22):** de regels in `AGENTS.md`, paragraaf "Eenvoud boven slimheid". De
+bron is een gevonden richtlijn voor agents. Vier regels zijn overgenomen. Twee regels zijn
+aangepast.
+
+| Regel uit de richtlijn | Wat we ermee doen |
+| --- | --- |
+| Templates alleen voor 3+ types, altijd met `concepts` | Overgenomen |
+| Geen overloads, unieke beschrijvende namen | Overgenomen, met uitzonderingen voor constructors, operators en namen uit de standaardbibliotheek. De voorbeelden in `camelCase` (`parseFromFile`) worden `snake_case`. |
+| Gedrag bij elkaar houden | Overgenomen, met een criterium voor splitsen: een eigen naam of een eigen test |
+| Structs voor data, vrije functies, `virtual` alleen voor runtime-polymorfie | Overgenomen, en aangevuld: een gesloten verzameling types is een `enum class` of `std::variant`; een klasse met `virtual` heeft een `virtual` destructor en gaat nooit by value |
+| Commentaar voor het waarom | Aangepast: ook het contract (eigenaar, levensduur, voorwaarden) hoort in commentaar. In demo's mag commentaar het mechanisme uitleggen. |
+
+**Waarom:** eenvoudige code geeft minder plek aan de fouten uit de catalogus, en een review
+ziet een fout sneller. De regel over overloads is gemeten: zie G27.
+
+**Wat geen hulpmiddel afdwingt:** de grens van drie types, de lengte van een functie, en de
+keuze tussen `virtual` en een `enum class`. Die regels bewaakt de review. De controles die wel
+bestaan, staan al aan via `.clang-tidy` en `cmake/leren.cmake`.

@@ -55,6 +55,7 @@ experiment heeft laten zien.
 | G19 | Twee verschillende definities van dezelfde naam (ODR-schending) | De linker kiest er één, zonder melding | ASan `detect_odr_violation`; `-flto -Wodr` | | open |
 | G20 | Cyclus van `std::shared_ptr` (geheugenlek) | Een lek geeft geen fout | LeakSanitizer (deel van ASan) | | open |
 | G21 | Exceptie uit een destructor | Een destructor is standaard `noexcept`: het programma stopt | Test die crasht | | open |
+| G27 | Overload die een andere versie kiest dan de lezer verwacht: `log_it("hello")` met `log_it(bool)` en `log_it(const std::string &)` | De code compileert en doet iets. Alleen een test op precies die aanroep ziet het verschil. | Clang `-Wstring-conversion`; clang-tidy `readability-implicit-bool-conversion` | Voorlopig (2026-11-22): de `bool`-versie wint. GCC 15 meldt niets. Clang en clang-tidy melden het. `set(NULL)` met `set(int)` en `set(void *)` compileert niet: dubbelzinnig. Zie B15. | open |
 
 ## Fase 5 — Code van anderen en het gereedschap
 

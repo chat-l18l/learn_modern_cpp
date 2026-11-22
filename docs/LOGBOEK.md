@@ -5,6 +5,33 @@ wat de volgende stap is.
 
 ---
 
+## 2026-11-22 — Stap 4: regels voor eenvoudige code (B15)
+
+**Gedaan:**
+
+1. Een tweede deel van de gevonden richtlijn voor agents bekeken: templates, overloads,
+   opbouw, `virtual` en commentaar.
+2. De regels opgenomen in `AGENTS.md`, paragraaf "Eenvoud boven slimheid". Per regel staat
+   erbij welk hulpmiddel de regel bewaakt.
+3. Besluit B15 en catalogusregel G27 (verrassende overload) toegevoegd.
+
+**Gemeten:**
+
+- De bestaande code heeft geen templates, geen `virtual` en geen overloads. De code voldoet al.
+- `log_it("hello")` kiest `log_it(bool)` boven `log_it(const std::string &)`. GCC 15 meldt niets.
+  Clang meldt `-Wstring-conversion`, clang-tidy meldt `readability-implicit-bool-conversion`.
+- De controles `modernize-use-constraints`, `readability-function-cognitive-complexity`,
+  `cppcoreguidelines-slicing` en `cppcoreguidelines-virtual-class-destructor` bestaan in
+  clang-tidy 23 en staan al aan.
+
+**Open:**
+
+- B10 (opmaak) en B11 (commitberichten) wachten op een besluit.
+
+**Volgende stap:** G03, of fase 5 afmaken met een fuzz-test.
+
+---
+
 ## 2026-11-22 — Stap 3: B12–B14 uitgevoerd, experiment e003 (G24–G26)
 
 **Gedaan:**

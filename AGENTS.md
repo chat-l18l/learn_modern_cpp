@@ -127,7 +127,27 @@ Code van anderen staat in `vreemd/`. Daar gelden de regels uit B14 en de metinge
   bijvoorbeeld met `std::expected`.
 - Commentaar beschrijft bedoeling en contract, niet de syntaxis. Zeg bij een view of
   referentie altijd wie de eigenaar is en hoe lang de eigenaar moet leven.
+- Namen in `snake_case`, zoals de standaardbibliotheek.
 - Opmaak komt uit `.clang-format`. Draai `pixi run format` voor een commit.
+
+### Eenvoud boven slimheid
+
+Code moet een lezer in één keer begrijpen, ook een agent. Besluit B15.
+
+| Regel | Uitzondering | Wat de regel bewaakt |
+| --- | --- | --- |
+| Schrijf concrete functies en structs. Een template alleen als dezelfde logica voor minstens drie echt verschillende types nodig is. | – | review |
+| Begrens elke template-parameter met een C++20 `concept` of een `requires`-clausule. | – | review; clang-tidy `modernize-use-constraints` herschrijft `std::enable_if` |
+| Geen overloads die alleen in parametertype verschillen. Geef elke functie een eigen naam: `parse_from_file`, `parse_from_string`. | Constructors, operators (`==`, `<=>`, `<<`), en namen die de standaardbibliotheek voorschrijft | review; clang-tidy `readability-implicit-bool-conversion`; Clang `-Wstring-conversion` |
+| Houd gedrag bij elkaar. Liever één duidelijke functie van 40 regels dan tien helpers verspreid over bestanden. Splits pas als het deel een eigen naam verdient of een eigen test nodig heeft. | – | clang-tidy `readability-function-cognitive-complexity` |
+| Data in een eenvoudige `struct`, logica in vrije functies. | – | review |
+| `virtual` alleen voor echte runtime-polymorfie met een open verzameling types. Een gesloten verzameling is een `enum class` met een `switch`, of een `std::variant`. | – | review |
+| Een klasse met `virtual` heeft een `virtual` of `protected` destructor. Geef een object van zo'n klasse nooit by value door. | – | `-Wnon-virtual-dtor`; clang-tidy `cppcoreguidelines-virtual-class-destructor` en `cppcoreguidelines-slicing` |
+| Commentaar legt uit waarom, en wat het contract is. Geen commentaar dat herhaalt wat de code al zegt. | In een demo of een experiment mag commentaar het mechanisme uitleggen: dat is de les. | review |
+
+Overloads zijn een bron van fouten, geen kwestie van smaak. Gemeten op 2026-11-22, met
+`void log_it(bool)` en `void log_it(const std::string &)`: `log_it("hello")` roept de
+`bool`-versie aan. GCC 15 meldt niets, ook niet met alle waarschuwingen. Zie catalogus G27.
 
 ## Schrijfstijl van documenten
 
